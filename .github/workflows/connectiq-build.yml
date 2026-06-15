@@ -137,7 +137,7 @@ jobs:
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: connectiq-${{ github.sha }}
+          name: tennis-score-venu2plus
           path: |
             bin/*.prg
             bin/*.iq
