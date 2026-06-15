@@ -20,6 +20,7 @@ permissions:
 env:
   CIQ_DEVICE_ID: venu2plus
   CIQ_OUTPUT_NAME: TennisScoreTracker
+  CIQ_SDK_VERSION: ${{ vars.CIQ_SDK_VERSION || '^9.2.0' }}
 
 jobs:
   build:
@@ -49,9 +50,9 @@ jobs:
             ~/.Garmin/ConnectIQ
             ~/go/pkg/mod
             ~/.cache/go-build
-            key: connectiq-${{ runner.os }}-${{ vars.CIQ_SDK_VERSION || '^9.2.0' }}-${{ hashFiles('manifest.xml') }}
+          key: connectiq-${{ runner.os }}-${{ env.CIQ_SDK_VERSION }}-${{ hashFiles('manifest.xml') }}
           restore-keys: |
-            connectiq-${{ runner.os }}-${{ vars.CIQ_SDK_VERSION || '^9.2.0' }}-
+            connectiq-${{ runner.os }}-${{ env.CIQ_SDK_VERSION }}-
             connectiq-${{ runner.os }}-
 
       - name: Check Garmin credentials
@@ -85,7 +86,6 @@ jobs:
           GARMIN_USERNAME: ${{ secrets.GARMIN_USERNAME }}
           GARMIN_PASSWORD: ${{ secrets.GARMIN_PASSWORD }}
           GARMIN_AGREEMENT_HASH: ${{ secrets.GARMIN_AGREEMENT_HASH }}
-          CIQ_SDK_VERSION: ${{ vars.CIQ_SDK_VERSION || '^9.2.0' }}
         run: |
           set -euo pipefail
           connect-iq-sdk-manager agreement accept --agreement-hash="$GARMIN_AGREEMENT_HASH"
