@@ -1,0 +1,17 @@
+# Connect IQ build outputs
+bin/
+*.prg
+*.iq
+*.debug.xml
+*.mirdb
+
+# Local signing keys
+developer_key.der
+developer_key.pem
+
+# Local notes and generated backups
+input_prompt.md
+*.jungle.bak
+
+# OS files
+.DS_Store

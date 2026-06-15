@@ -1,0 +1,4 @@
+<resources>
+    <bitmap id="LauncherIcon" filename="../images/launcher_icon.png" />
+    <bitmap id="TennisBall" filename="../images/tennis_ball.png" />
+</resources>

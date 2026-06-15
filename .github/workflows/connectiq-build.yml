@@ -1,0 +1,144 @@
+name: Connect IQ Build
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      package_iq:
+        description: Build store-ready IQ package
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+env:
+  CIQ_DEVICE_ID: venu2plus
+  CIQ_OUTPUT_NAME: TennisScoreTracker
+
+jobs:
+  build:
+    name: Build Venu 2 Plus PRG
+    runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+
+      - name: Cache Connect IQ SDK
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.Garmin/ConnectIQ
+            ~/go/pkg/mod
+            ~/.cache/go-build
+            key: connectiq-${{ runner.os }}-${{ vars.CIQ_SDK_VERSION || '^9.2.0' }}-${{ hashFiles('manifest.xml') }}
+          restore-keys: |
+            connectiq-${{ runner.os }}-${{ vars.CIQ_SDK_VERSION || '^9.2.0' }}-
+            connectiq-${{ runner.os }}-
+
+      - name: Check Garmin credentials
+        env:
+          GARMIN_USERNAME: ${{ secrets.GARMIN_USERNAME }}
+          GARMIN_PASSWORD: ${{ secrets.GARMIN_PASSWORD }}
+          GARMIN_AGREEMENT_HASH: ${{ secrets.GARMIN_AGREEMENT_HASH }}
+        run: |
+          set -euo pipefail
+          missing=0
+          for name in GARMIN_USERNAME GARMIN_PASSWORD GARMIN_AGREEMENT_HASH; do
+            if [ -z "${!name}" ]; then
+              echo "::error::Missing GitHub secret: ${name}"
+              missing=1
+            fi
+          done
+          exit "$missing"
+
+      - name: Install Connect IQ SDK Manager CLI
+        run: |
+          set -euo pipefail
+          go install github.com/lindell/connect-iq-sdk-manager-cli@v0.8.4
+          if [ ! -x "$HOME/go/bin/connect-iq-sdk-manager" ] && [ -x "$HOME/go/bin/connect-iq-sdk-manager-cli" ]; then
+            ln -s "$HOME/go/bin/connect-iq-sdk-manager-cli" "$HOME/go/bin/connect-iq-sdk-manager"
+          fi
+          echo "$HOME/go/bin" >> "$GITHUB_PATH"
+          "$HOME/go/bin/connect-iq-sdk-manager" --help >/dev/null
+
+      - name: Install Connect IQ SDK and Venu 2 Plus device
+        env:
+          GARMIN_USERNAME: ${{ secrets.GARMIN_USERNAME }}
+          GARMIN_PASSWORD: ${{ secrets.GARMIN_PASSWORD }}
+          GARMIN_AGREEMENT_HASH: ${{ secrets.GARMIN_AGREEMENT_HASH }}
+          CIQ_SDK_VERSION: ${{ vars.CIQ_SDK_VERSION || '^9.2.0' }}
+        run: |
+          set -euo pipefail
+          connect-iq-sdk-manager agreement accept --agreement-hash="$GARMIN_AGREEMENT_HASH"
+          connect-iq-sdk-manager login --username="$GARMIN_USERNAME" --password="$GARMIN_PASSWORD"
+          connect-iq-sdk-manager sdk set "$CIQ_SDK_VERSION"
+          connect-iq-sdk-manager device download --manifest=manifest.xml
+          echo "$(connect-iq-sdk-manager sdk current-path --bin)" >> "$GITHUB_PATH"
+
+      - name: Prepare developer key
+        env:
+          GARMIN_DEVELOPER_KEY_DER_BASE64: ${{ secrets.GARMIN_DEVELOPER_KEY_DER_BASE64 }}
+        run: |
+          set -euo pipefail
+          if [ -n "$GARMIN_DEVELOPER_KEY_DER_BASE64" ]; then
+            echo "$GARMIN_DEVELOPER_KEY_DER_BASE64" | base64 --decode > developer_key.der
+          else
+            openssl genrsa -out developer_key.pem 4096
+            openssl pkcs8 -topk8 -inform PEM -outform DER -in developer_key.pem -out developer_key.der -nocrypt
+          fi
+
+      - name: Regenerate PNG assets
+        run: node tools/generate_assets.js
+
+      - name: Show compiler version
+        run: monkeyc --version
+
+      - name: Build PRG
+        run: |
+          set -euo pipefail
+          mkdir -p bin
+          monkeyc \
+            -d "$CIQ_DEVICE_ID" \
+            -f monkey.jungle \
+            -o "bin/${CIQ_OUTPUT_NAME}-${CIQ_DEVICE_ID}.prg" \
+            -y developer_key.der \
+            -w
+
+      - name: Build IQ package
+        if: github.event_name == 'workflow_dispatch' && inputs.package_iq
+        run: |
+          set -euo pipefail
+          monkeyc \
+            -e \
+            -f monkey.jungle \
+            -o "bin/${CIQ_OUTPUT_NAME}.iq" \
+            -y developer_key.der \
+            -w
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: connectiq-${{ github.sha }}
+          path: |
+            bin/*.prg
+            bin/*.iq
+          if-no-files-found: error
