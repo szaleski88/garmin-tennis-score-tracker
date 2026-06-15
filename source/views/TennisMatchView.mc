@@ -69,7 +69,7 @@ class TennisMatchView extends WatchUi.View {
             width,
             centerX,
             86,
-            114,
+            104,
             "OPPONENT",
             _opponentScore,
             !state.playerServing && !state.matchFinished,
@@ -84,7 +84,7 @@ class TennisMatchView extends WatchUi.View {
             dc,
             width,
             centerX,
-            216,
+            226,
             114,
             "ME",
             _playerScore,
@@ -118,29 +118,58 @@ class TennisMatchView extends WatchUi.View {
         var stageText = stageBadgeText(state);
         var stageColor = stageBadgeColor(state);
 
-        dc.setColor(COLOR_PANEL, Graphics.COLOR_TRANSPARENT);
-        dc.fillRoundedRectangle(centerX - 142, 32, 284, 28, 14);
-
         dc.setColor(COLOR_MUTED, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(centerX, 37, Graphics.FONT_XTINY, summaryText, Graphics.TEXT_JUSTIFY_CENTER);
+        dc.drawText(
+            centerX,
+            36,
+            Graphics.FONT_XTINY,
+            summaryText,
+            Graphics.TEXT_JUSTIFY_CENTER
+        );
 
         dc.setColor(stageColor, Graphics.COLOR_TRANSPARENT);
-        dc.drawRoundedRectangle(centerX - 47, 61, 94, 22, 11);
-        dc.drawText(centerX, 64, Graphics.FONT_XTINY, stageText, Graphics.TEXT_JUSTIFY_CENTER);
+        dc.drawRoundedRectangle(centerX - 37, 54, 74, 20, 10);
+        dc.drawText(
+            centerX,
+            57,
+            Graphics.FONT_XTINY,
+            stageText,
+            Graphics.TEXT_JUSTIFY_CENTER
+        );
     }
 
     function drawDivider(dc, width) {
         dc.setColor(COLOR_LINE, Graphics.COLOR_TRANSPARENT);
-        dc.fillRoundedRectangle(84, SPLIT_Y - 2, width - 168, 4, 2);
+        dc.fillRoundedRectangle(
+            90,
+            SPLIT_Y - 1,
+            width - 180,
+            2,
+            1
+        );
 
         dc.setColor(COLOR_BALL, Graphics.COLOR_TRANSPARENT);
-        dc.fillCircle(width / 2, SPLIT_Y, 4);
+        dc.fillCircle(width / 2, SPLIT_Y, 6);
     }
 
-    function drawScoreZone(dc, width, centerX, y, height, label, score, isServing, isPlayer, isWinner, isFinished) {
+    function drawScoreZone(
+        dc,
+        width,
+        centerX,
+        y,
+        height,
+        label,
+        score,
+        isServing,
+        isPlayer,
+        isWinner,
+        isFinished
+    ) {
         var x = 44;
         var panelWidth = width - (x * 2);
+
         var accent = isPlayer ? COLOR_PLAYER : COLOR_OPPONENT;
+
         var border = COLOR_LINE;
         var scoreColor = Graphics.COLOR_WHITE;
         var labelColor = COLOR_MUTED;
@@ -158,40 +187,65 @@ class TennisMatchView extends WatchUi.View {
             scoreColor = COLOR_DIM;
         }
 
-        dc.setColor(isServing || isWinner ? COLOR_PANEL_HI : COLOR_PANEL, Graphics.COLOR_TRANSPARENT);
-        dc.fillRoundedRectangle(x, y, panelWidth, height, 20);
+        dc.setColor(
+            (isServing || isWinner) ? COLOR_PANEL_HI : COLOR_PANEL,
+            Graphics.COLOR_TRANSPARENT
+        );
 
-        dc.setPenWidth(isServing || isWinner ? 2 : 1);
+        dc.fillRoundedRectangle(
+            x,
+            y,
+            panelWidth,
+            height,
+            20
+        );
+
+        dc.setPenWidth(isWinner ? 3 : ((isServing) ? 2 : 1));
+
         dc.setColor(border, Graphics.COLOR_TRANSPARENT);
-        dc.drawRoundedRectangle(x, y, panelWidth, height, 20);
+
+        dc.drawRoundedRectangle(
+            x,
+            y,
+            panelWidth,
+            height,
+            20
+        );
+
         dc.setPenWidth(1);
+
+        dc.setColor(labelColor, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(
+            centerX,
+            y + 13,
+            Graphics.FONT_TINY,
+            label,
+            Graphics.TEXT_JUSTIFY_CENTER
+        );
 
         if (isServing) {
             dc.setColor(COLOR_BALL, Graphics.COLOR_TRANSPARENT);
-            dc.fillRoundedRectangle(x + 14, y + 13, 4, 24, 2);
-            drawServerBadge(dc, x + 26, y + 12, accent);
-        }
 
-        dc.setColor(labelColor, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(centerX, y + 13, Graphics.FONT_TINY, label, Graphics.TEXT_JUSTIFY_CENTER);
+            dc.fillCircle(
+                centerX - 55,
+                y + 20,
+                5
+            );
+        }
 
         var font = scoreFont(score);
-        var scoreY = y + 67 - (Graphics.getFontHeight(font) / 2);
+
+        var scoreY = y + 58 - (Graphics.getFontHeight(font) / 2);
 
         dc.setColor(scoreColor, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(centerX, scoreY, font, score, Graphics.TEXT_JUSTIFY_CENTER);
-    }
 
-    function drawServerBadge(dc, x, y, accent) {
-        if (_ball != null) {
-            dc.drawBitmap(x, y, _ball);
-        } else {
-            dc.setColor(COLOR_BALL, Graphics.COLOR_TRANSPARENT);
-            dc.fillCircle(x + 11, y + 11, 10);
-        }
-
-        dc.setColor(accent, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(x + 30, y + 3, Graphics.FONT_XTINY, "SERVE", Graphics.TEXT_JUSTIFY_LEFT);
+        dc.drawText(
+            centerX,
+            scoreY,
+            font,
+            score,
+            Graphics.TEXT_JUSTIFY_CENTER
+        );
     }
 
     function drawFooter(dc, height, centerX, state) {
@@ -254,18 +308,18 @@ class TennisMatchView extends WatchUi.View {
     function footerText(state) {
         if (state.matchFinished) {
             if (state.matchWinner == 1) {
-                return "MATCH WON";
+                return "✓ MATCH WON";
             }
 
-            return "OPPONENT WON";
+            return "✕ MATCH LOST";
         }
 
         if (_detail == "Me serving") {
-            return "ME SERVING";
+            return "● ME SERVING";
         }
 
         if (_detail == "Opponent serving") {
-            return "OPPONENT SERVING";
+            return "● OPPONENT SERVING";
         }
 
         return _detail;
