@@ -7,66 +7,61 @@ class TennisMatchDelegate extends WatchUi.BehaviorDelegate {
     var _engine;
     var _view;
 
-    // Variables for double-click detection
-    var _lastMiddleClickTime = 0;
-
     function initialize(engine, view) {
         BehaviorDelegate.initialize();
         _engine = engine;
         _view = view;
     }
 
+    // --- Touch & Swipe Handling ---
     function onTap(clickEvent) {
         var coords = clickEvent.getCoordinates();
+
+        // Top half of the screen
         if (coords[1] < SCREEN_SPLIT_Y) {
             return scoreOpponentPoint();
         }
-        return scoreOpponentPoint(); // FIXED: Per your initial prompt, bottom half scores opponent.
-    }
 
-    function onKey(keyEvent) {
-        var key = keyEvent.getKey();
-
-        if (isTopButton(key)) {
-            return scoreOpponentPoint();
-        }
-
-        if (isBottomButton(key)) {
-            return scoreOpponentPoint(); // FIXED: Both top and bottom score for opponent
-        }
-
-        return false;
-    }
-
-    function onBack() {
-        return scoreOpponentPoint(); // Matches the bottom button logic
-    }
-
-    function onMenu() {
-        var currentTime = System.getTimer();
-
-        // If middle button is clicked twice within 500ms, prompt exit
-        if (currentTime - _lastMiddleClickTime < 500) {
-            showExitConfirmation();
-        } else {
-            // Otherwise, just do a normal Undo
-            undoPoint();
-        }
-
-        _lastMiddleClickTime = currentTime;
-        return true;
-    }
-
-    function onSelect() {
-        return false;
+        // Bottom half of the screen
+        return scorePlayerPoint();
     }
 
     function onSwipe(swipeEvent) {
-        if (swipeEvent.getDirection() == WatchUi.SWIPE_RIGHT) {
+        var direction = swipeEvent.getDirection();
+
+        if (direction == WatchUi.SWIPE_RIGHT) {
             showExitConfirmation();
             return true;
+        } else if (direction == WatchUi.SWIPE_LEFT) {
+            return undoPoint();
+        } else if (direction == WatchUi.SWIPE_DOWN) {
+            return redoPoint();
         }
+
         return false;
+    }
+
+    // --- Hardware Button Short Presses ---
+    function onKey(keyEvent) {
+        var key = keyEvent.getKey();
+
+        // Both top and bottom buttons score for the opponent
+        if (isTopButton(key) || isBottomButton(key)) {
+            return scoreOpponentPoint();
+        }
+
+        return false;
+    }
+
+    // --- System Fallbacks ---
+    function onBack() {
+        // Consume the back event to prevent an accidental native exit
+        return true;
+    }
+
+    function onMenu() {
+        // Consume the menu event to prevent native menu bleed-through on a short middle-button press
+        return true;
     }
 
     // --- Button Identification ---
@@ -86,6 +81,15 @@ class TennisMatchDelegate extends WatchUi.BehaviorDelegate {
     function undoPoint() {
         _engine.undo();
         _view.requestRedraw();
+        return true;
+    }
+
+    function redoPoint() {
+        // Safety check to ensure the engine supports redo
+        if (_engine has :redo) {
+            _engine.redo();
+            _view.requestRedraw();
+        }
         return true;
     }
 
