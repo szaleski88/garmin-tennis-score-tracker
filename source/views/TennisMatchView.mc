@@ -104,13 +104,15 @@ class TennisMatchView extends WatchUi.View {
         dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_TRANSPARENT);
         dc.drawText(centerX, 36, Graphics.FONT_MEDIUM, currentTimeText(), Graphics.TEXT_JUSTIFY_CENTER);
 
-        dc.drawText(136, 70, Graphics.FONT_XTINY, caloriesText(state), Graphics.TEXT_JUSTIFY_CENTER);
+        // Pushed outward from 136 offset to a 100 offset
+        dc.drawText(100, 70, Graphics.FONT_XTINY, caloriesText(state), Graphics.TEXT_JUSTIFY_CENTER);
 
         if (_stageLabel != "GAME") {
             dc.drawText(centerX, 70, Graphics.FONT_XTINY, stageBadgeText(state), Graphics.TEXT_JUSTIFY_CENTER);
         }
 
-        dc.drawText(width - 136, 70, Graphics.FONT_XTINY, batteryText(), Graphics.TEXT_JUSTIFY_CENTER);
+        // Pushed outward symmetrically
+        dc.drawText(width - 100, 70, Graphics.FONT_XTINY, batteryText(), Graphics.TEXT_JUSTIFY_CENTER);
     }
 
     function drawColumnLabels(dc) {
@@ -122,42 +124,51 @@ class TennisMatchView extends WatchUi.View {
     }
 
     function drawOpponentScore(dc, centerX, state) {
-        var scoreColor = state.matchFinished && state.matchWinner != 2 ? COLOR_DIM : Graphics.COLOR_WHITE;
+        var scoreColor = state.matchFinished && state.matchWinner != 2 ?
+            COLOR_DIM : Graphics.COLOR_WHITE;
         var sideColor = state.matchFinished && state.matchWinner != 2 ? COLOR_DIM : null;
 
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(126, 118, Graphics.FONT_SMALL, "OP", Graphics.TEXT_JUSTIFY_CENTER);
+        // Shifted left from 126 to 104
+        dc.drawText(104, 118, Graphics.FONT_SMALL, "OP", Graphics.TEXT_JUSTIFY_CENTER);
 
-        drawSideNumber(dc, 82, 156, state.opponentSets, sideColor == null ? COLOR_SET : sideColor);
+        // Shifted side numbers out to 60 and 356
+        drawSideNumber(dc, 60, 156, state.opponentSets, sideColor == null ? COLOR_SET : sideColor);
         drawPointScore(dc, centerX, 150, _opponentScore, scoreColor);
-        drawSideNumber(dc, 334, 156, state.opponentGames, sideColor == null ? COLOR_GAME : sideColor);
+        drawSideNumber(dc, 356, 156, state.opponentGames, sideColor == null ? COLOR_GAME : sideColor);
 
         if (!state.playerServing && !state.matchFinished) {
-            drawServingMarker(dc, 112, 168);
+            // Shifted left from 112 to 90
+            drawServingMarker(dc, 90, 168);
         }
     }
 
     function drawDivider(dc, width, centerX) {
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-        dc.fillRoundedRectangle(54, SPLIT_Y - 3, width - 108, 6, 3);
+        // Changed starting X from 54 to 24, and width reduction from 108 to 48
+        dc.fillRoundedRectangle(24, SPLIT_Y - 3, width - 48, 6, 3);
 
         dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_TRANSPARENT);
         dc.fillCircle(centerX, SPLIT_Y, 4);
     }
 
     function drawPlayerScore(dc, centerX, state) {
-        var scoreColor = state.matchFinished && state.matchWinner != 1 ? COLOR_DIM : Graphics.COLOR_BLACK;
+        var scoreColor = state.matchFinished && state.matchWinner != 1 ?
+            COLOR_DIM : Graphics.COLOR_BLACK;
         var sideColor = state.matchFinished && state.matchWinner != 1 ? COLOR_DIM : null;
 
-        drawSideNumber(dc, 82, 268, state.playerSets, sideColor == null ? COLOR_SET : sideColor);
+        // Shifted side numbers out to 60 and 356
+        drawSideNumber(dc, 60, 268, state.playerSets, sideColor == null ? COLOR_SET : sideColor);
         drawPointScore(dc, centerX, 280, _playerScore, scoreColor);
-        drawSideNumber(dc, 334, 252, state.playerGames, sideColor == null ? COLOR_GAME : sideColor);
+        drawSideNumber(dc, 356, 252, state.playerGames, sideColor == null ? COLOR_GAME : sideColor);
 
         dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(292, 304, Graphics.FONT_SMALL, "ME", Graphics.TEXT_JUSTIFY_LEFT);
+        // Shifted right from 292 to 314
+        dc.drawText(314, 304, Graphics.FONT_SMALL, "ME", Graphics.TEXT_JUSTIFY_LEFT);
 
         if (state.playerServing && !state.matchFinished) {
-            drawServingMarker(dc, 112, 304);
+            // Shifted left from 112 to 90
+            drawServingMarker(dc, 90, 304);
         }
     }
 
