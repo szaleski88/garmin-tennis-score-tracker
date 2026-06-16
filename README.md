@@ -7,7 +7,7 @@ Touch-first Garmin Connect IQ watch app for fast tennis scoring on the Venu 2 Pl
 - Venu 2 Plus target, 416x416 round AMOLED layout
 - Pure black match screen with large score text
 - Top-half tap scores opponent, bottom-half tap scores player
-- Upper hardware button scores player, lower button undo; 3s lower-button hold returns to menu
+- Upper hardware button scores opponent, lower button scores player, middle button undoes the last point
 - Swipe right opens exit confirmation
 - Best-of-3, best-of-5, tie-break-only, super-tie-break-only formats
 - Normal, no-ad, tie-break, super tie-break, short-set rules via settings

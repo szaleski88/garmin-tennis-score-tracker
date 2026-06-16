@@ -1,73 +1,85 @@
 using Toybox.System;
 using Toybox.WatchUi;
+using Toybox.Timer; // Required for the hold timer
 
 class TennisMatchDelegate extends WatchUi.BehaviorDelegate {
-    static const HOLD_TO_MENU_MS = 3000;
+    static const SCREEN_SPLIT_Y = 208;
 
     var _engine;
     var _view;
-    var _backDownAt;
-    var _suppressBack;
+
+    // Timer variables for the middle button
+    var _middleButtonTimer;
+    var _middleButtonHoldTriggered = false;
 
     function initialize(engine, view) {
         BehaviorDelegate.initialize();
         _engine = engine;
         _view = view;
-        _backDownAt = null;
-        _suppressBack = false;
+        _middleButtonTimer = new Timer.Timer();
     }
 
     function onTap(clickEvent) {
         var coords = clickEvent.getCoordinates();
-
-        if (coords[1] < 208) {
-            _engine.scoreOpponent();
-        } else {
-            _engine.scorePlayer();
+        if (coords[1] < SCREEN_SPLIT_Y) {
+            return scoreOpponentPoint();
         }
-
-        _view.requestRedraw();
-        return true;
+        return scorePlayerPoint();
     }
 
+    // Triggered when a button is physically pressed down
+    function onKeyPressed(keyEvent) {
+        if (isMiddleButton(keyEvent.getKey())) {
+            _middleButtonHoldTriggered = false;
+            // Start 3-second timer
+            _middleButtonTimer.start(method(:onMiddleButtonHeld), 3000, false);
+            return true;
+        }
+        return false;
+    }
+
+    // Triggered when a button is physically released
+    function onKeyReleased(keyEvent) {
+        if (isMiddleButton(keyEvent.getKey())) {
+            _middleButtonTimer.stop();
+
+            // If released before 3 seconds, treat it as a standard click (Undo)
+            if (!_middleButtonHoldTriggered) {
+                return undoPoint();
+            }
+            return true; // Consume the release event if hold was triggered
+        }
+        return false;
+    }
+
+    // Standard short-press fallback for Top/Bottom buttons
     function onKey(keyEvent) {
         var key = keyEvent.getKey();
 
-        if (key == WatchUi.KEY_ENTER || key == WatchUi.KEY_START) {
+        if (isTopButton(key)) {
+            return scoreOpponentPoint();
+        }
+
+        if (isBottomButton(key)) {
+            // NOTE: Change to scoreOpponentPoint() if the prompt wasn't a typo!
             return scorePlayerPoint();
         }
 
-        if (isBackKey(key)) {
-            return handleBackRelease(true);
-        }
-
         return false;
     }
 
-    function onKeyPressed(keyEvent) {
-        if (isBackKey(keyEvent.getKey())) {
-            _backDownAt = System.getTimer();
-            _suppressBack = false;
-            return true;
-        }
-
-        return false;
-    }
-
-    function onKeyReleased(keyEvent) {
-        if (isBackKey(keyEvent.getKey())) {
-            return handleBackRelease(true);
-        }
-
-        return false;
-    }
-
+    // Fallback for standard behavior events
     function onBack() {
-        return handleBackRelease(true);
+        return scorePlayerPoint();
+    }
+
+    function onMenu() {
+        // Returning true prevents default OS menu, but we handle logic in onKeyReleased now
+        return true;
     }
 
     function onSelect() {
-        return scorePlayerPoint();
+        return false;
     }
 
     function onSwipe(swipeEvent) {
@@ -75,42 +87,33 @@ class TennisMatchDelegate extends WatchUi.BehaviorDelegate {
             showExitConfirmation();
             return true;
         }
-
         return false;
     }
 
-    function isBackKey(key) {
+    // Button identification helpers
+    function isTopButton(key) {
+        return key == WatchUi.KEY_ENTER || key == WatchUi.KEY_START;
+    }
+
+    function isBottomButton(key) {
         return key == WatchUi.KEY_ESC || key == WatchUi.KEY_LAP;
     }
 
-    function handleBackRelease(suppressDuplicate) {
-        if (_suppressBack) {
-            _suppressBack = false;
-            _backDownAt = null;
-            return true;
-        }
-
-        if (_backDownAt != null) {
-            var held = System.getTimer() - _backDownAt;
-            _backDownAt = null;
-
-            if (suppressDuplicate) {
-                _suppressBack = true;
-            }
-
-            if (held >= HOLD_TO_MENU_MS) {
-                returnToMenu();
-                return true;
-            }
-        }
-
-        undoPoint();
-        return true;
+    function isMiddleButton(key) {
+        return key == WatchUi.KEY_MENU;
     }
 
+    // Actions
     function undoPoint() {
         _engine.undo();
         _view.requestRedraw();
+        return true;
+    }
+
+    function scoreOpponentPoint() {
+        _engine.scoreOpponent();
+        _view.requestRedraw();
+        return true;
     }
 
     function scorePlayerPoint() {
@@ -119,12 +122,10 @@ class TennisMatchDelegate extends WatchUi.BehaviorDelegate {
         return true;
     }
 
-    function returnToMenu() {
-        WatchUi.switchToView(
-            new MainMenuView(),
-            new TennisMenuDelegate(),
-            WatchUi.SLIDE_RIGHT
-        );
+    // 3-Second Hold Callback
+    function onMiddleButtonHeld() {
+        _middleButtonHoldTriggered = true;
+        System.exit(); // Exits immediately as requested. Swap with showExitConfirmation() if you want a prompt first.
     }
 
     function showExitConfirmation() {
@@ -145,7 +146,6 @@ class ExitMatchConfirmationDelegate extends WatchUi.ConfirmationDelegate {
         if (response == WatchUi.CONFIRM_YES) {
             System.exit();
         }
-
         WatchUi.popView(WatchUi.SLIDE_LEFT);
         return true;
     }

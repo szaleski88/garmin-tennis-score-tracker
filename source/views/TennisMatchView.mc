@@ -102,17 +102,19 @@ class TennisMatchView extends WatchUi.View {
 
     function drawTopCap(dc, width, centerX, state) {
         dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(centerX, 36, Graphics.FONT_MEDIUM, currentTimeText(), Graphics.TEXT_JUSTIFY_CENTER);
 
-        // Pushed outward from 136 offset to a 100 offset
-        dc.drawText(100, 70, Graphics.FONT_XTINY, caloriesText(state), Graphics.TEXT_JUSTIFY_CENTER);
+        // Moved time Y-coordinate UP from 36 to 20
+        dc.drawText(centerX, 20, Graphics.FONT_MEDIUM, currentTimeText(), Graphics.TEXT_JUSTIFY_CENTER);
 
-        if (_stageLabel != "GAME") {
-            dc.drawText(centerX, 70, Graphics.FONT_XTINY, stageBadgeText(state), Graphics.TEXT_JUSTIFY_CENTER);
+        // Moved calories and battery Y-coordinate UP from 70 to 52
+        dc.drawText(136, 52, Graphics.FONT_XTINY, caloriesText(state), Graphics.TEXT_JUSTIFY_CENTER);
+
+        // Only show the badge if the match is finished (removes "GAME" during active play)
+        if (state.matchFinished) {
+            dc.drawText(centerX, 52, Graphics.FONT_XTINY, stageBadgeText(state), Graphics.TEXT_JUSTIFY_CENTER);
         }
 
-        // Pushed outward symmetrically
-        dc.drawText(width - 100, 70, Graphics.FONT_XTINY, batteryText(), Graphics.TEXT_JUSTIFY_CENTER);
+        dc.drawText(width - 136, 52, Graphics.FONT_XTINY, batteryText(), Graphics.TEXT_JUSTIFY_CENTER);
     }
 
     function drawColumnLabels(dc) {
@@ -157,18 +159,16 @@ class TennisMatchView extends WatchUi.View {
             COLOR_DIM : Graphics.COLOR_BLACK;
         var sideColor = state.matchFinished && state.matchWinner != 1 ? COLOR_DIM : null;
 
-        // Shifted side numbers out to 60 and 356
-        drawSideNumber(dc, 60, 268, state.playerSets, sideColor == null ? COLOR_SET : sideColor);
+        // Aligned both Y-coordinates to 260
+        drawSideNumber(dc, 82, 260, state.playerSets, sideColor == null ? COLOR_SET : sideColor);
         drawPointScore(dc, centerX, 280, _playerScore, scoreColor);
-        drawSideNumber(dc, 356, 252, state.playerGames, sideColor == null ? COLOR_GAME : sideColor);
+        drawSideNumber(dc, 334, 260, state.playerGames, sideColor == null ? COLOR_GAME : sideColor);
 
         dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_TRANSPARENT);
-        // Shifted right from 292 to 314
-        dc.drawText(314, 304, Graphics.FONT_SMALL, "ME", Graphics.TEXT_JUSTIFY_LEFT);
+        dc.drawText(292, 304, Graphics.FONT_SMALL, "ME", Graphics.TEXT_JUSTIFY_LEFT);
 
         if (state.playerServing && !state.matchFinished) {
-            // Shifted left from 112 to 90
-            drawServingMarker(dc, 90, 304);
+            drawServingMarker(dc, 112, 304);
         }
     }
 
@@ -196,7 +196,8 @@ class TennisMatchView extends WatchUi.View {
         var color = footerColor(state);
 
         dc.setColor(color, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(centerX, height - 48, Graphics.FONT_SMALL, text, Graphics.TEXT_JUSTIFY_CENTER);
+        // Moved duration Y-coordinate UP from height - 48 to height - 64
+        dc.drawText(centerX, height - 64, Graphics.FONT_SMALL, text, Graphics.TEXT_JUSTIFY_CENTER);
     }
 
     function drawCenteredText(dc, x, centerY, font, text) {
