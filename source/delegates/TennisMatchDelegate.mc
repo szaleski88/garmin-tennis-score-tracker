@@ -2,6 +2,8 @@ using Toybox.System;
 using Toybox.WatchUi;
 
 class TennisMatchDelegate extends WatchUi.InputDelegate {
+    static const HOLD_TO_MENU_MS = 3000;
+
     var _engine;
     var _view;
     var _backDownAt;
@@ -43,8 +45,7 @@ class TennisMatchDelegate extends WatchUi.InputDelegate {
                 return true;
             }
 
-            _engine.undo();
-            _view.requestRedraw();
+            undoPoint();
             return true;
         }
 
@@ -54,6 +55,7 @@ class TennisMatchDelegate extends WatchUi.InputDelegate {
     function onKeyPressed(keyEvent) {
         if (isBackKey(keyEvent.getKey())) {
             _backDownAt = System.getTimer();
+            _suppressBack = false;
             return true;
         }
 
@@ -61,15 +63,24 @@ class TennisMatchDelegate extends WatchUi.InputDelegate {
     }
 
     function onKeyReleased(keyEvent) {
-        if (isBackKey(keyEvent.getKey()) && _backDownAt != null) {
-            var held = System.getTimer() - _backDownAt;
-            _backDownAt = null;
-
-            if (held >= 900) {
+        if (isBackKey(keyEvent.getKey())) {
+            if (_backDownAt == null) {
                 _suppressBack = true;
-                showExitConfirmation();
+                undoPoint();
                 return true;
             }
+
+            var held = System.getTimer() - _backDownAt;
+            _backDownAt = null;
+            _suppressBack = true;
+
+            if (held >= HOLD_TO_MENU_MS) {
+                returnToMenu();
+                return true;
+            }
+
+            undoPoint();
+            return true;
         }
 
         return false;
@@ -86,6 +97,19 @@ class TennisMatchDelegate extends WatchUi.InputDelegate {
 
     function isBackKey(key) {
         return key == WatchUi.KEY_ESC || key == WatchUi.KEY_LAP;
+    }
+
+    function undoPoint() {
+        _engine.undo();
+        _view.requestRedraw();
+    }
+
+    function returnToMenu() {
+        WatchUi.switchToView(
+            new MainMenuView(),
+            new TennisMenuDelegate(),
+            WatchUi.SLIDE_RIGHT
+        );
     }
 
     function showExitConfirmation() {

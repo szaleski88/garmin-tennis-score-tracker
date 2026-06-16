@@ -34,12 +34,18 @@
 - Undo a game-winning point.
 - Undo a set-winning point.
 - Undo a match-winning point.
+- Click the lower hardware button repeatedly and verify each click undoes one stored point.
 - Verify server, stage, score, and match status restore each time.
+
+## Hardware Controls
+
+- Hold the lower hardware button for at least 3 seconds from the match screen.
+- Verify the app returns to the main menu and the saved match remains resumable.
 
 ## Recovery
 
 - Score at least one point.
-- Exit app with confirmation.
+- Return to menu with a 3s lower-button hold.
 - Reopen app.
 - Verify Resume Match appears.
 - Resume and confirm score/settings/history restored.
