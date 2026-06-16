@@ -34,6 +34,7 @@
 - Undo a game-winning point.
 - Undo a set-winning point.
 - Undo a match-winning point.
+- Score six points, undo five times, verify a sixth undo does not change the score, redo five times, and verify a sixth redo does not change the score.
 - Click the middle hardware button repeatedly and verify each click undoes one stored point.
 - Verify server, stage, score, and match status restore each time.
 

@@ -12,7 +12,7 @@ Touch-first Garmin Connect IQ watch app for fast tennis scoring on the Venu 2 Pl
 - Best-of-3, best-of-5, tie-break-only, super-tie-break-only formats
 - Normal, no-ad, tie-break, super tie-break, short-set rules via settings
 - Server indicator with PNG tennis ball asset
-- Undo snapshots capped at 300
+- Undo/redo snapshots capped at 5
 - Match/settings/history recovery with `Toybox.Application.Storage`
 - Haptic patterns for point, game, set, and match events
 

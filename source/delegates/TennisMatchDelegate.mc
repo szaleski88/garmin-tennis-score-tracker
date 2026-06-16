@@ -6,11 +6,13 @@ class TennisMatchDelegate extends WatchUi.BehaviorDelegate {
 
     var _engine;
     var _view;
+    var _exitConfirmationOpen;
 
     function initialize(engine, view) {
         BehaviorDelegate.initialize();
         _engine = engine;
         _view = view;
+        _exitConfirmationOpen = false;
     }
 
     // --- Screen Taps ---
@@ -84,8 +86,7 @@ class TennisMatchDelegate extends WatchUi.BehaviorDelegate {
 
     // --- System Behaviors ---
     function onBack() {
-        // Venu lower-button Back/ESC should score the player and never pop the match view.
-        return scorePlayerPoint();
+        return showExitConfirmation();
     }
 
     function onMenu() {
@@ -94,14 +95,14 @@ class TennisMatchDelegate extends WatchUi.BehaviorDelegate {
 
     // --- Game Actions ---
     function undoPoint() {
-        _engine.undo();
-        _view.requestRedraw();
+        if (_engine.undo()) {
+            _view.requestRedraw();
+        }
         return true;
     }
 
     function redoPoint() {
-        if (_engine has :redo) {
-            _engine.redo();
+        if (_engine.redo()) {
             _view.requestRedraw();
         }
         return true;
@@ -119,10 +120,20 @@ class TennisMatchDelegate extends WatchUi.BehaviorDelegate {
         return true;
     }
 
+    function exitConfirmationClosed() {
+        _exitConfirmationOpen = false;
+    }
+
     function showExitConfirmation() {
+        if (_exitConfirmationOpen) {
+            return true;
+        }
+
+        _exitConfirmationOpen = true;
+
         WatchUi.pushView(
             new WatchUi.Confirmation("Exit Match?"),
-            new ExitMatchConfirmationDelegate(),
+            new ExitMatchConfirmationDelegate(self),
             WatchUi.SLIDE_RIGHT
         );
 
@@ -131,11 +142,18 @@ class TennisMatchDelegate extends WatchUi.BehaviorDelegate {
 }
 
 class ExitMatchConfirmationDelegate extends WatchUi.ConfirmationDelegate {
-    function initialize() {
+    var _matchDelegate;
+
+    function initialize(matchDelegate) {
         ConfirmationDelegate.initialize();
+        _matchDelegate = matchDelegate;
     }
 
     function onResponse(response) {
+        if (_matchDelegate != null) {
+            _matchDelegate.exitConfirmationClosed();
+        }
+
         if (response == WatchUi.CONFIRM_YES) {
             System.exit();
         }

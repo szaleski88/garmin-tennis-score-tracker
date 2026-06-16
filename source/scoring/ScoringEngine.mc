@@ -1,16 +1,18 @@
 using Toybox.Attention;
 
 class ScoringEngine {
-    static const MAX_HISTORY = 300;
+    static const MAX_HISTORY = 5;
 
     var _settings;
     var _state;
     var _history;
+    var _redoHistory;
 
     function initialize(settings, playerServesFirst) {
         _settings = settings.clone();
         _state = new MatchState();
         _history = [];
+        _redoHistory = [];
 
         _state.playerServing = playerServesFirst;
         _state.tieBreakStarterPlayerServing = playerServesFirst;
@@ -30,19 +32,28 @@ class ScoringEngine {
 
     static function resume(snapshot) {
         var engine = new ScoringEngine(snapshot.settings, snapshot.state.playerServing);
-        engine.restore(snapshot.state, snapshot.history);
+        engine.restore(snapshot.state, snapshot.history, snapshot.redoHistory);
         return engine;
     }
 
-    function restore(state, history) {
+    function restore(state, history, redoHistory) {
         _state = state.clone();
         ensureMetrics();
         _history = [];
+        _redoHistory = [];
 
         if (history != null) {
             for (var i = 0; i < history.size(); i++) {
                 _history.add(history[i].clone());
             }
+            trimStack(_history);
+        }
+
+        if (redoHistory != null) {
+            for (var j = 0; j < redoHistory.size(); j++) {
+                _redoHistory.add(redoHistory[j].clone());
+            }
+            trimStack(_redoHistory);
         }
     }
 
@@ -55,13 +66,11 @@ class ScoringEngine {
     }
 
     function historyToStorage() {
-        var data = [];
+        return stateStackToStorage(_history);
+    }
 
-        for (var i = 0; i < _history.size(); i++) {
-            data.add(_history[i].toArray());
-        }
-
-        return data;
+    function redoHistoryToStorage() {
+        return stateStackToStorage(_redoHistory);
     }
 
     function scorePlayer() {
@@ -78,6 +87,7 @@ class ScoringEngine {
         }
 
         pushSnapshot();
+        clearRedoHistory();
 
         if (playerWonPoint) {
             _state.playerPoints++;
@@ -96,7 +106,24 @@ class ScoringEngine {
             return false;
         }
 
-        _state = _history.remove(_history.size() - 1);
+        pushRedoSnapshot();
+        var previousState = _history[_history.size() - 1];
+        _history.remove(previousState);
+        _state = previousState;
+        ensureMetrics();
+        PersistenceManager.saveMatch(self);
+        return true;
+    }
+
+    function redo() {
+        if (_redoHistory.size() == 0) {
+            return false;
+        }
+
+        pushSnapshot();
+        var nextState = _redoHistory[_redoHistory.size() - 1];
+        _redoHistory.remove(nextState);
+        _state = nextState;
         ensureMetrics();
         PersistenceManager.saveMatch(self);
         return true;
@@ -126,11 +153,33 @@ class ScoringEngine {
     }
 
     function pushSnapshot() {
-        if (_history.size() >= MAX_HISTORY) {
-            _history.remove(0);
+        _history.add(_state.clone());
+        trimStack(_history);
+    }
+
+    function pushRedoSnapshot() {
+        _redoHistory.add(_state.clone());
+        trimStack(_redoHistory);
+    }
+
+    function clearRedoHistory() {
+        _redoHistory = [];
+    }
+
+    function stateStackToStorage(stack) {
+        var data = [];
+
+        for (var i = 0; i < stack.size(); i++) {
+            data.add(stack[i].toArray());
         }
 
-        _history.add(_state.clone());
+        return data;
+    }
+
+    function trimStack(stack) {
+        while (stack.size() > MAX_HISTORY) {
+            stack.remove(stack[0]);
+        }
     }
 
     function evaluatePoint(playerWonPoint) {
