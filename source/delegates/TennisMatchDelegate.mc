@@ -1,6 +1,5 @@
 using Toybox.System;
 using Toybox.WatchUi;
-using Toybox.Timer; // Required for the hold timer
 
 class TennisMatchDelegate extends WatchUi.BehaviorDelegate {
     static const SCREEN_SPLIT_Y = 208;
@@ -8,15 +7,13 @@ class TennisMatchDelegate extends WatchUi.BehaviorDelegate {
     var _engine;
     var _view;
 
-    // Timer variables for the middle button
-    var _middleButtonTimer;
-    var _middleButtonHoldTriggered = false;
+    // Variables for double-click detection
+    var _lastMiddleClickTime = 0;
 
     function initialize(engine, view) {
         BehaviorDelegate.initialize();
         _engine = engine;
         _view = view;
-        _middleButtonTimer = new Timer.Timer();
     }
 
     function onTap(clickEvent) {
@@ -24,35 +21,9 @@ class TennisMatchDelegate extends WatchUi.BehaviorDelegate {
         if (coords[1] < SCREEN_SPLIT_Y) {
             return scoreOpponentPoint();
         }
-        return scorePlayerPoint();
+        return scoreOpponentPoint(); // FIXED: Per your initial prompt, bottom half scores opponent.
     }
 
-    // Triggered when a button is physically pressed down
-    function onKeyPressed(keyEvent) {
-        if (isMiddleButton(keyEvent.getKey())) {
-            _middleButtonHoldTriggered = false;
-            // Start 3-second timer
-            _middleButtonTimer.start(method(:onMiddleButtonHeld), 3000, false);
-            return true;
-        }
-        return false;
-    }
-
-    // Triggered when a button is physically released
-    function onKeyReleased(keyEvent) {
-        if (isMiddleButton(keyEvent.getKey())) {
-            _middleButtonTimer.stop();
-
-            // If released before 3 seconds, treat it as a standard click (Undo)
-            if (!_middleButtonHoldTriggered) {
-                return undoPoint();
-            }
-            return true; // Consume the release event if hold was triggered
-        }
-        return false;
-    }
-
-    // Standard short-press fallback for Top/Bottom buttons
     function onKey(keyEvent) {
         var key = keyEvent.getKey();
 
@@ -61,20 +32,28 @@ class TennisMatchDelegate extends WatchUi.BehaviorDelegate {
         }
 
         if (isBottomButton(key)) {
-            // NOTE: Change to scoreOpponentPoint() if the prompt wasn't a typo!
-            return scorePlayerPoint();
+            return scoreOpponentPoint(); // FIXED: Both top and bottom score for opponent
         }
 
         return false;
     }
 
-    // Fallback for standard behavior events
     function onBack() {
-        return scorePlayerPoint();
+        return scoreOpponentPoint(); // Matches the bottom button logic
     }
 
     function onMenu() {
-        // Returning true prevents default OS menu, but we handle logic in onKeyReleased now
+        var currentTime = System.getTimer();
+
+        // If middle button is clicked twice within 500ms, prompt exit
+        if (currentTime - _lastMiddleClickTime < 500) {
+            showExitConfirmation();
+        } else {
+            // Otherwise, just do a normal Undo
+            undoPoint();
+        }
+
+        _lastMiddleClickTime = currentTime;
         return true;
     }
 
@@ -90,7 +69,7 @@ class TennisMatchDelegate extends WatchUi.BehaviorDelegate {
         return false;
     }
 
-    // Button identification helpers
+    // --- Button Identification ---
     function isTopButton(key) {
         return key == WatchUi.KEY_ENTER || key == WatchUi.KEY_START;
     }
@@ -103,7 +82,7 @@ class TennisMatchDelegate extends WatchUi.BehaviorDelegate {
         return key == WatchUi.KEY_MENU;
     }
 
-    // Actions
+    // --- Game Actions ---
     function undoPoint() {
         _engine.undo();
         _view.requestRedraw();
@@ -120,12 +99,6 @@ class TennisMatchDelegate extends WatchUi.BehaviorDelegate {
         _engine.scorePlayer();
         _view.requestRedraw();
         return true;
-    }
-
-    // 3-Second Hold Callback
-    function onMiddleButtonHeld() {
-        _middleButtonHoldTriggered = true;
-        System.exit(); // Exits immediately as requested. Swap with showExitConfirmation() if you want a prompt first.
     }
 
     function showExitConfirmation() {

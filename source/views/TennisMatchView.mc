@@ -103,18 +103,19 @@ class TennisMatchView extends WatchUi.View {
     function drawTopCap(dc, width, centerX, state) {
         dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_TRANSPARENT);
 
-        // Moved time Y-coordinate UP from 36 to 20
-        dc.drawText(centerX, 20, Graphics.FONT_MEDIUM, currentTimeText(), Graphics.TEXT_JUSTIFY_CENTER);
+        // Push time up closer to the very top edge
+        dc.drawText(centerX, 10, Graphics.FONT_MEDIUM, currentTimeText(), Graphics.TEXT_JUSTIFY_CENTER);
 
-        // Moved calories and battery Y-coordinate UP from 70 to 52
-        dc.drawText(136, 52, Graphics.FONT_XTINY, caloriesText(state), Graphics.TEXT_JUSTIFY_CENTER);
+        // Push calories and battery down to create separation from the time
+        // Note: I'm using the widened X-coordinates (100) here, but adjust to 136 if you kept the original narrow layout.
+        dc.drawText(100, 62, Graphics.FONT_XTINY, caloriesText(state), Graphics.TEXT_JUSTIFY_CENTER);
 
-        // Only show the badge if the match is finished (removes "GAME" during active play)
+        // Only show the badge if the match is finished
         if (state.matchFinished) {
-            dc.drawText(centerX, 52, Graphics.FONT_XTINY, stageBadgeText(state), Graphics.TEXT_JUSTIFY_CENTER);
+            dc.drawText(centerX, 62, Graphics.FONT_XTINY, stageBadgeText(state), Graphics.TEXT_JUSTIFY_CENTER);
         }
 
-        dc.drawText(width - 136, 52, Graphics.FONT_XTINY, batteryText(), Graphics.TEXT_JUSTIFY_CENTER);
+        dc.drawText(width - 100, 62, Graphics.FONT_XTINY, batteryText(), Graphics.TEXT_JUSTIFY_CENTER);
     }
 
     function drawColumnLabels(dc) {
