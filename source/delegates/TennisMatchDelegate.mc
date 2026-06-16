@@ -13,19 +13,17 @@ class TennisMatchDelegate extends WatchUi.BehaviorDelegate {
         _view = view;
     }
 
-    // --- Touch & Swipe Handling ---
+    // --- Screen Taps ---
     function onTap(clickEvent) {
         var coords = clickEvent.getCoordinates();
 
-        // Top half of the screen
         if (coords[1] < SCREEN_SPLIT_Y) {
             return scoreOpponentPoint();
         }
-
-        // Bottom half of the screen
         return scorePlayerPoint();
     }
 
+    // --- Raw Swipes ---
     function onSwipe(swipeEvent) {
         var direction = swipeEvent.getDirection();
 
@@ -36,45 +34,52 @@ class TennisMatchDelegate extends WatchUi.BehaviorDelegate {
             return undoPoint();
         } else if (direction == WatchUi.SWIPE_DOWN) {
             return redoPoint();
+        } else if (direction == WatchUi.SWIPE_UP) {
+            // Mapping Swipe Up to Undo as well for extra forgiveness
+            return undoPoint();
         }
 
         return false;
     }
 
-    // --- Hardware Button Short Presses ---
+    // --- Native Swipe Behaviors (Fallbacks if Garmin ignores raw swipe) ---
+    function onPreviousPage() {
+        // Garmin natively maps Swipe Down to this
+        return redoPoint();
+    }
+
+    function onNextPage() {
+        // Garmin natively maps Swipe Up to this
+        return undoPoint();
+    }
+
+    // --- Hardware Buttons ---
     function onKey(keyEvent) {
         var key = keyEvent.getKey();
 
-        // Both top and bottom buttons score for the opponent
-        if (isTopButton(key) || isBottomButton(key)) {
+        // Explicitly catch Top Button
+        if (key == WatchUi.KEY_ENTER || key == WatchUi.KEY_START) {
+            return scoreOpponentPoint();
+        }
+
+        // Catch Bottom Button (if the OS passes it here before onBack)
+        if (key == WatchUi.KEY_ESC || key == WatchUi.KEY_LAP) {
             return scoreOpponentPoint();
         }
 
         return false;
     }
 
-    // --- System Fallbacks ---
+    // --- System Behaviors ---
     function onBack() {
-        // Consume the back event to prevent an accidental native exit
-        return true;
+        // If a user swipes Right, onSwipe catches it, returns true, and STOPS it from reaching here.
+        // Therefore, if we reach onBack(), it is 100% a physical Bottom Button press.
+        return scoreOpponentPoint();
     }
 
     function onMenu() {
-        // Consume the menu event to prevent native menu bleed-through on a short middle-button press
+        // Absorb the short-press Middle Button so it doesn't open default Garmin menus
         return true;
-    }
-
-    // --- Button Identification ---
-    function isTopButton(key) {
-        return key == WatchUi.KEY_ENTER || key == WatchUi.KEY_START;
-    }
-
-    function isBottomButton(key) {
-        return key == WatchUi.KEY_ESC || key == WatchUi.KEY_LAP;
-    }
-
-    function isMiddleButton(key) {
-        return key == WatchUi.KEY_MENU;
     }
 
     // --- Game Actions ---
@@ -85,7 +90,6 @@ class TennisMatchDelegate extends WatchUi.BehaviorDelegate {
     }
 
     function redoPoint() {
-        // Safety check to ensure the engine supports redo
         if (_engine has :redo) {
             _engine.redo();
             _view.requestRedraw();
