@@ -103,9 +103,13 @@ class TennisMatchView extends WatchUi.View {
         dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_TRANSPARENT);
         dc.drawText(centerX, 36, Graphics.FONT_MEDIUM, currentTimeText(), Graphics.TEXT_JUSTIFY_CENTER);
 
-        dc.drawText(96, 70, Graphics.FONT_XTINY, caloriesText(state), Graphics.TEXT_JUSTIFY_CENTER);
-        dc.drawText(centerX, 70, Graphics.FONT_XTINY, stageBadgeText(state), Graphics.TEXT_JUSTIFY_CENTER);
-        dc.drawText(width - 96, 70, Graphics.FONT_XTINY, batteryText(), Graphics.TEXT_JUSTIFY_CENTER);
+        dc.drawText(136, 70, Graphics.FONT_XTINY, caloriesText(state), Graphics.TEXT_JUSTIFY_CENTER);
+
+        if (_stageLabel != "GAME") {
+            dc.drawText(centerX, 70, Graphics.FONT_XTINY, stageBadgeText(state), Graphics.TEXT_JUSTIFY_CENTER);
+        }
+
+        dc.drawText(width - 136, 70, Graphics.FONT_XTINY, batteryText(), Graphics.TEXT_JUSTIFY_CENTER);
     }
 
     function drawColumnLabels(dc) {
@@ -121,14 +125,14 @@ class TennisMatchView extends WatchUi.View {
         var sideColor = state.matchFinished && state.matchWinner != 2 ? COLOR_DIM : null;
 
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(108, 112, Graphics.FONT_MEDIUM, "OP", Graphics.TEXT_JUSTIFY_CENTER);
+        dc.drawText(126, 118, Graphics.FONT_SMALL, "OP", Graphics.TEXT_JUSTIFY_CENTER);
 
         drawSideNumber(dc, 82, 156, state.opponentSets, sideColor == null ? COLOR_SET : sideColor);
         drawPointScore(dc, centerX, 150, _opponentScore, scoreColor);
         drawSideNumber(dc, 334, 156, state.opponentGames, sideColor == null ? COLOR_GAME : sideColor);
 
         if (!state.playerServing && !state.matchFinished) {
-            drawServingMarker(dc, 112, 168, false);
+            drawServingMarker(dc, 112, 168);
         }
     }
 
@@ -149,10 +153,10 @@ class TennisMatchView extends WatchUi.View {
         drawSideNumber(dc, 334, 252, state.playerGames, sideColor == null ? COLOR_GAME : sideColor);
 
         dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(300, 296, Graphics.FONT_MEDIUM, "ME", Graphics.TEXT_JUSTIFY_LEFT);
+        dc.drawText(292, 304, Graphics.FONT_SMALL, "ME", Graphics.TEXT_JUSTIFY_LEFT);
 
         if (state.playerServing && !state.matchFinished) {
-            drawServingMarker(dc, 112, 304, true);
+            drawServingMarker(dc, 112, 304);
         }
     }
 
@@ -166,21 +170,13 @@ class TennisMatchView extends WatchUi.View {
         drawCenteredText(dc, x, centerY, scoreFont(score), score);
     }
 
-    function drawServingMarker(dc, x, y, playerServing) {
+    function drawServingMarker(dc, x, y) {
         dc.setColor(COLOR_BALL, Graphics.COLOR_TRANSPARENT);
         dc.fillCircle(x + 11, y + 11, 16);
 
         if (_ball != null) {
             dc.drawBitmap(x, y, _ball);
         }
-
-        if (playerServing) {
-            dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_TRANSPARENT);
-        } else {
-            dc.setColor(COLOR_WARNING, Graphics.COLOR_TRANSPARENT);
-        }
-
-        dc.drawText(x + 30, y + 2, Graphics.FONT_XTINY, "SERVE", Graphics.TEXT_JUSTIFY_LEFT);
     }
 
     function drawFooter(dc, height, centerX, state) {
@@ -211,7 +207,7 @@ class TennisMatchView extends WatchUi.View {
         var stats = System.getSystemStats();
 
         if (stats != null && (stats has :battery)) {
-            return stats.battery + "%";
+            return (stats.battery + 0.5).toNumber().format("%d") + "%";
         }
 
         return "--%";
@@ -221,10 +217,10 @@ class TennisMatchView extends WatchUi.View {
         var calories = MatchMetrics.calorieDelta(state);
 
         if (calories == null) {
-            return "-- kcal";
+            return "--kcal";
         }
 
-        return calories + " kcal";
+        return calories + "kcal";
     }
 
     function stageBadgeText(state) {
@@ -242,21 +238,17 @@ class TennisMatchView extends WatchUi.View {
     function footerText(state) {
         if (state.matchFinished) {
             if (state.matchWinner == 1) {
-                return durationText(state) + "  MATCH WON";
+                return durationText(state) + "  WON";
             }
 
-            return durationText(state) + "  MATCH LOST";
+            return durationText(state) + "  LOST";
         }
 
-        if (_detail == "Me serving") {
-            return durationText(state) + "  ME SERVING";
+        if (_detail == "GOLDEN POINT") {
+            return "GOLDEN POINT";
         }
 
-        if (_detail == "Opponent serving") {
-            return durationText(state) + "  OP SERVING";
-        }
-
-        return durationText(state) + "  " + _detail;
+        return durationText(state);
     }
 
     function durationText(state) {

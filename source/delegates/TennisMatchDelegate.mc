@@ -1,7 +1,7 @@
 using Toybox.System;
 using Toybox.WatchUi;
 
-class TennisMatchDelegate extends WatchUi.InputDelegate {
+class TennisMatchDelegate extends WatchUi.BehaviorDelegate {
     static const HOLD_TO_MENU_MS = 3000;
 
     var _engine;
@@ -10,7 +10,7 @@ class TennisMatchDelegate extends WatchUi.InputDelegate {
     var _suppressBack;
 
     function initialize(engine, view) {
-        InputDelegate.initialize();
+        BehaviorDelegate.initialize();
         _engine = engine;
         _view = view;
         _backDownAt = null;
@@ -34,19 +34,11 @@ class TennisMatchDelegate extends WatchUi.InputDelegate {
         var key = keyEvent.getKey();
 
         if (key == WatchUi.KEY_ENTER || key == WatchUi.KEY_START) {
-            _engine.scorePlayer();
-            _view.requestRedraw();
-            return true;
+            return scorePlayerPoint();
         }
 
         if (isBackKey(key)) {
-            if (_suppressBack) {
-                _suppressBack = false;
-                return true;
-            }
-
-            undoPoint();
-            return true;
+            return handleBackRelease(true);
         }
 
         return false;
@@ -64,26 +56,18 @@ class TennisMatchDelegate extends WatchUi.InputDelegate {
 
     function onKeyReleased(keyEvent) {
         if (isBackKey(keyEvent.getKey())) {
-            if (_backDownAt == null) {
-                _suppressBack = true;
-                undoPoint();
-                return true;
-            }
-
-            var held = System.getTimer() - _backDownAt;
-            _backDownAt = null;
-            _suppressBack = true;
-
-            if (held >= HOLD_TO_MENU_MS) {
-                returnToMenu();
-                return true;
-            }
-
-            undoPoint();
-            return true;
+            return handleBackRelease(true);
         }
 
         return false;
+    }
+
+    function onBack() {
+        return handleBackRelease(true);
+    }
+
+    function onSelect() {
+        return scorePlayerPoint();
     }
 
     function onSwipe(swipeEvent) {
@@ -99,9 +83,40 @@ class TennisMatchDelegate extends WatchUi.InputDelegate {
         return key == WatchUi.KEY_ESC || key == WatchUi.KEY_LAP;
     }
 
+    function handleBackRelease(suppressDuplicate) {
+        if (_suppressBack) {
+            _suppressBack = false;
+            _backDownAt = null;
+            return true;
+        }
+
+        if (_backDownAt != null) {
+            var held = System.getTimer() - _backDownAt;
+            _backDownAt = null;
+
+            if (suppressDuplicate) {
+                _suppressBack = true;
+            }
+
+            if (held >= HOLD_TO_MENU_MS) {
+                returnToMenu();
+                return true;
+            }
+        }
+
+        undoPoint();
+        return true;
+    }
+
     function undoPoint() {
         _engine.undo();
         _view.requestRedraw();
+    }
+
+    function scorePlayerPoint() {
+        _engine.scorePlayer();
+        _view.requestRedraw();
+        return true;
     }
 
     function returnToMenu() {
