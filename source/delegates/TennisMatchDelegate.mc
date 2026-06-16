@@ -16,7 +16,6 @@ class TennisMatchDelegate extends WatchUi.BehaviorDelegate {
     // --- Screen Taps ---
     function onTap(clickEvent) {
         var coords = clickEvent.getCoordinates();
-
         if (coords[1] < SCREEN_SPLIT_Y) {
             return scoreOpponentPoint();
         }
@@ -26,7 +25,6 @@ class TennisMatchDelegate extends WatchUi.BehaviorDelegate {
     // --- Raw Swipes ---
     function onSwipe(swipeEvent) {
         var direction = swipeEvent.getDirection();
-
         if (direction == WatchUi.SWIPE_RIGHT) {
             showExitConfirmation();
             return true;
@@ -56,7 +54,6 @@ class TennisMatchDelegate extends WatchUi.BehaviorDelegate {
     // --- Hardware Buttons ---
     function onKey(keyEvent) {
         var key = keyEvent.getKey();
-
         // Explicitly catch Top Button
         if (key == WatchUi.KEY_ENTER || key == WatchUi.KEY_START) {
             return scoreOpponentPoint();
@@ -64,7 +61,7 @@ class TennisMatchDelegate extends WatchUi.BehaviorDelegate {
 
         // Catch Bottom Button (if the OS passes it here before onBack)
         if (key == WatchUi.KEY_ESC || key == WatchUi.KEY_LAP) {
-            return scoreOpponentPoint();
+            return scorePlayerPoint(); // FIX: Now scores for the player
         }
 
         return false;
@@ -72,9 +69,8 @@ class TennisMatchDelegate extends WatchUi.BehaviorDelegate {
 
     // --- System Behaviors ---
     function onBack() {
-        // If a user swipes Right, onSwipe catches it, returns true, and STOPS it from reaching here.
-        // Therefore, if we reach onBack(), it is 100% a physical Bottom Button press.
-        return scoreOpponentPoint();
+        // If we reach onBack(), it is 100% a physical Bottom Button press.
+        return scorePlayerPoint(); // FIX: Now scores for the player
     }
 
     function onMenu() {
@@ -127,7 +123,7 @@ class ExitMatchConfirmationDelegate extends WatchUi.ConfirmationDelegate {
         if (response == WatchUi.CONFIRM_YES) {
             System.exit();
         }
-        WatchUi.popView(WatchUi.SLIDE_LEFT);
+        // FIX: Removed the manual popView. Garmin auto-dismisses Confirmations!
         return true;
     }
 }
