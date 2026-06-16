@@ -6,7 +6,7 @@ using Toybox.WatchUi;
 
 class TennisMatchView extends WatchUi.View {
     static const SPLIT_Y = 208;
-    static const FACE_RADIUS = 176;
+    static const FACE_RADIUS = 208;
     static const TOP_BLACK_Y = 92;
     static const BOTTOM_BLACK_Y = 352;
     static const COLOR_ORANGE = 0xFF7A1A;
@@ -92,7 +92,8 @@ class TennisMatchView extends WatchUi.View {
         dc.clear();
 
         dc.setColor(COLOR_ORANGE, Graphics.COLOR_TRANSPARENT);
-        dc.fillCircle(centerX, centerY, FACE_RADIUS);
+        // Use centerX as the radius to perfectly fill the width of the screen
+        dc.fillCircle(centerX, centerY, centerX);
 
         dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_TRANSPARENT);
         dc.fillRectangle(0, TOP_BLACK_Y, width, SPLIT_Y - TOP_BLACK_Y);
