@@ -24,10 +24,21 @@ class TennisMatchDelegate extends WatchUi.BehaviorDelegate {
 
     // --- Raw Swipes ---
     function onSwipe(swipeEvent) {
-        var direction = swipeEvent.getDirection();
+        return handleSwipe(swipeEvent.getDirection());
+    }
+
+    // --- Native Horizontal Swipe Behaviors ---
+    function onPreviousMode() {
+        return handleSwipe(WatchUi.SWIPE_RIGHT);
+    }
+
+    function onNextMode() {
+        return handleSwipe(WatchUi.SWIPE_LEFT);
+    }
+
+    function handleSwipe(direction) {
         if (direction == WatchUi.SWIPE_RIGHT) {
-            showExitConfirmation();
-            return true;
+            return showExitConfirmation();
         } else if (direction == WatchUi.SWIPE_LEFT) {
             return undoPoint();
         } else if (direction == WatchUi.SWIPE_DOWN) {
@@ -59,6 +70,10 @@ class TennisMatchDelegate extends WatchUi.BehaviorDelegate {
             return scoreOpponentPoint();
         }
 
+        if (key == WatchUi.KEY_MENU) {
+            return undoPoint();
+        }
+
         // Catch Bottom Button (if the OS passes it here before onBack)
         if (key == WatchUi.KEY_ESC || key == WatchUi.KEY_LAP) {
             return scorePlayerPoint(); // FIX: Now scores for the player
@@ -69,13 +84,12 @@ class TennisMatchDelegate extends WatchUi.BehaviorDelegate {
 
     // --- System Behaviors ---
     function onBack() {
-        // If we reach onBack(), it is 100% a physical Bottom Button press.
-        return scorePlayerPoint(); // FIX: Now scores for the player
+        // Venu lower-button Back/ESC should score the player and never pop the match view.
+        return scorePlayerPoint();
     }
 
     function onMenu() {
-        // Absorb the short-press Middle Button so it doesn't open default Garmin menus
-        return true;
+        return undoPoint();
     }
 
     // --- Game Actions ---
@@ -111,6 +125,8 @@ class TennisMatchDelegate extends WatchUi.BehaviorDelegate {
             new ExitMatchConfirmationDelegate(),
             WatchUi.SLIDE_RIGHT
         );
+
+        return true;
     }
 }
 
