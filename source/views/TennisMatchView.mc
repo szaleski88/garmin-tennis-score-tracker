@@ -1,6 +1,7 @@
 using Toybox.Application;
 using Toybox.Graphics;
 using Toybox.System;
+using Toybox.Timer;
 using Toybox.WatchUi;
 
 class TennisMatchView extends WatchUi.View {
@@ -21,11 +22,13 @@ class TennisMatchView extends WatchUi.View {
     var _opponentScore;
     var _stageLabel;
     var _detail;
+    var _timer;
 
     function initialize(engine) {
         View.initialize();
         _engine = engine;
         _ball = null;
+        _timer = new Timer.Timer();
         refreshCache();
     }
 
@@ -35,6 +38,23 @@ class TennisMatchView extends WatchUi.View {
 
     function onShow() {
         refreshCache();
+
+        if (!_engine.getState().matchFinished) {
+            _timer.start(method(:onTimer), 5000, true);
+        }
+    }
+
+    function onHide() {
+        _timer.stop();
+    }
+
+    function onTimer() {
+        if (_engine.getState().matchFinished) {
+            _timer.stop();
+            return;
+        }
+
+        WatchUi.requestUpdate();
     }
 
     function refreshCache() {
@@ -57,10 +77,9 @@ class TennisMatchView extends WatchUi.View {
         var centerX = width / 2;
         var centerY = height / 2;
         var state = _engine.getState();
-        var settings = _engine.getSettings();
 
         drawFace(dc, width, height, centerX, centerY);
-        drawTopCap(dc, width, centerX, state, settings);
+        drawTopCap(dc, width, centerX, state);
         drawColumnLabels(dc);
         drawOpponentScore(dc, centerX, state);
         drawDivider(dc, width, centerX);
@@ -80,11 +99,11 @@ class TennisMatchView extends WatchUi.View {
         dc.fillRectangle(0, BOTTOM_BLACK_Y, width, height - BOTTOM_BLACK_Y);
     }
 
-    function drawTopCap(dc, width, centerX, state, settings) {
+    function drawTopCap(dc, width, centerX, state) {
         dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_TRANSPARENT);
         dc.drawText(centerX, 36, Graphics.FONT_MEDIUM, currentTimeText(), Graphics.TEXT_JUSTIFY_CENTER);
 
-        dc.drawText(96, 70, Graphics.FONT_XTINY, setSummaryText(state, settings), Graphics.TEXT_JUSTIFY_CENTER);
+        dc.drawText(96, 70, Graphics.FONT_XTINY, caloriesText(state), Graphics.TEXT_JUSTIFY_CENTER);
         dc.drawText(centerX, 70, Graphics.FONT_XTINY, stageBadgeText(state), Graphics.TEXT_JUSTIFY_CENTER);
         dc.drawText(width - 96, 70, Graphics.FONT_XTINY, batteryText(), Graphics.TEXT_JUSTIFY_CENTER);
     }
@@ -198,16 +217,14 @@ class TennisMatchView extends WatchUi.View {
         return "--%";
     }
 
-    function setSummaryText(state, settings) {
-        if (settings.matchFormat == MatchFormat.STB_MATCH) {
-            return "STB";
+    function caloriesText(state) {
+        var calories = MatchMetrics.calorieDelta(state);
+
+        if (calories == null) {
+            return "-- kcal";
         }
 
-        if (settings.matchFormat == MatchFormat.TB_MATCH) {
-            return "TB";
-        }
-
-        return "S " + state.playerSets + "-" + state.opponentSets;
+        return calories + " kcal";
     }
 
     function stageBadgeText(state) {
@@ -225,21 +242,25 @@ class TennisMatchView extends WatchUi.View {
     function footerText(state) {
         if (state.matchFinished) {
             if (state.matchWinner == 1) {
-                return "MATCH WON";
+                return durationText(state) + "  MATCH WON";
             }
 
-            return "MATCH LOST";
+            return durationText(state) + "  MATCH LOST";
         }
 
         if (_detail == "Me serving") {
-            return "ME SERVING";
+            return durationText(state) + "  ME SERVING";
         }
 
         if (_detail == "Opponent serving") {
-            return "OP SERVING";
+            return durationText(state) + "  OP SERVING";
         }
 
-        return _detail;
+        return durationText(state) + "  " + _detail;
+    }
+
+    function durationText(state) {
+        return MatchMetrics.formatDuration(MatchMetrics.elapsedSeconds(state));
     }
 
     function footerColor(state) {

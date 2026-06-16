@@ -10,6 +10,10 @@ class MatchState {
     var matchFinished;
     var matchWinner;
     var tieBreakStarterPlayerServing;
+    var startedAt;
+    var finishedAt;
+    var calorieBaseline;
+    var calorieFinished;
 
     function initialize() {
         playerSets = 0;
@@ -23,6 +27,10 @@ class MatchState {
         matchFinished = false;
         matchWinner = 0;
         tieBreakStarterPlayerServing = true;
+        startedAt = null;
+        finishedAt = null;
+        calorieBaseline = null;
+        calorieFinished = null;
     }
 
     function clone() {
@@ -38,6 +46,10 @@ class MatchState {
         copy.matchFinished = matchFinished;
         copy.matchWinner = matchWinner;
         copy.tieBreakStarterPlayerServing = tieBreakStarterPlayerServing;
+        copy.startedAt = startedAt;
+        copy.finishedAt = finishedAt;
+        copy.calorieBaseline = calorieBaseline;
+        copy.calorieFinished = calorieFinished;
         return copy;
     }
 
@@ -53,7 +65,11 @@ class MatchState {
             "playerServing" => playerServing,
             "matchFinished" => matchFinished,
             "matchWinner" => matchWinner,
-            "tieBreakStarterPlayerServing" => tieBreakStarterPlayerServing
+            "tieBreakStarterPlayerServing" => tieBreakStarterPlayerServing,
+            "startedAt" => startedAt,
+            "finishedAt" => finishedAt,
+            "calorieBaseline" => calorieBaseline,
+            "calorieFinished" => calorieFinished
         };
     }
 
@@ -69,7 +85,11 @@ class MatchState {
             playerServing,
             matchFinished,
             matchWinner,
-            tieBreakStarterPlayerServing
+            tieBreakStarterPlayerServing,
+            startedAt,
+            finishedAt,
+            calorieBaseline,
+            calorieFinished
         ];
     }
 
@@ -113,6 +133,18 @@ class MatchState {
         if (data.hasKey("tieBreakStarterPlayerServing")) {
             state.tieBreakStarterPlayerServing = data["tieBreakStarterPlayerServing"];
         }
+        if (data.hasKey("startedAt")) {
+            state.startedAt = data["startedAt"];
+        }
+        if (data.hasKey("finishedAt")) {
+            state.finishedAt = data["finishedAt"];
+        }
+        if (data.hasKey("calorieBaseline")) {
+            state.calorieBaseline = data["calorieBaseline"];
+        }
+        if (data.hasKey("calorieFinished")) {
+            state.calorieFinished = data["calorieFinished"];
+        }
 
         return state;
     }
@@ -135,6 +167,20 @@ class MatchState {
         state.matchFinished = data[8];
         state.matchWinner = data[9];
         state.tieBreakStarterPlayerServing = data[10];
+
+        if (data.size() > 11) {
+            state.startedAt = data[11];
+        }
+        if (data.size() > 12) {
+            state.finishedAt = data[12];
+        }
+        if (data.size() > 13) {
+            state.calorieBaseline = data[13];
+        }
+        if (data.size() > 14) {
+            state.calorieFinished = data[14];
+        }
+
         return state;
     }
 }

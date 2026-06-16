@@ -14,6 +14,8 @@ class ScoringEngine {
 
         _state.playerServing = playerServesFirst;
         _state.tieBreakStarterPlayerServing = playerServesFirst;
+        _state.startedAt = MatchMetrics.nowSeconds();
+        _state.calorieBaseline = MatchMetrics.currentCalories();
 
         if (_settings.matchFormat == MatchFormat.STB_MATCH) {
             _state.stage = StageType.SUPER_TIE_BREAK;
@@ -34,6 +36,7 @@ class ScoringEngine {
 
     function restore(state, history) {
         _state = state.clone();
+        ensureMetrics();
         _history = [];
 
         if (history != null) {
@@ -94,8 +97,32 @@ class ScoringEngine {
         }
 
         _state = _history.remove(_history.size() - 1);
+        ensureMetrics();
         PersistenceManager.saveMatch(self);
         return true;
+    }
+
+    function ensureMetrics() {
+        if (_state.startedAt == null) {
+            _state.startedAt = MatchMetrics.nowSeconds();
+        }
+
+        if (_state.calorieBaseline == null) {
+            _state.calorieBaseline = MatchMetrics.currentCalories();
+        }
+
+        if (_state.matchFinished) {
+            if (_state.finishedAt == null) {
+                _state.finishedAt = MatchMetrics.nowSeconds();
+            }
+
+            if (_state.calorieFinished == null) {
+                _state.calorieFinished = MatchMetrics.currentCalories();
+            }
+        } else {
+            _state.finishedAt = null;
+            _state.calorieFinished = null;
+        }
     }
 
     function pushSnapshot() {
@@ -228,6 +255,8 @@ class ScoringEngine {
         _state.matchFinished = true;
         _state.stage = StageType.MATCH_FINISHED;
         _state.matchWinner = playerWonPoint ? 1 : 2;
+        _state.finishedAt = MatchMetrics.nowSeconds();
+        _state.calorieFinished = MatchMetrics.currentCalories();
     }
 
     function startNextSet() {
