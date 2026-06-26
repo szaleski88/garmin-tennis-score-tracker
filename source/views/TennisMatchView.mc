@@ -23,12 +23,16 @@ class TennisMatchView extends WatchUi.View {
     var _stageLabel;
     var _detail;
     var _timer;
+    var _noticeTimer;
+    var _noticeText;
 
     function initialize(engine) {
         View.initialize();
         _engine = engine;
         _ball = null;
         _timer = new Timer.Timer();
+        _noticeTimer = new Timer.Timer();
+        _noticeText = null;
         refreshCache();
     }
 
@@ -38,14 +42,12 @@ class TennisMatchView extends WatchUi.View {
 
     function onShow() {
         refreshCache();
-
-        if (!_engine.getState().matchFinished) {
-            _timer.start(method(:onTimer), 5000, true);
-        }
+        updateClockTimer();
     }
 
     function onHide() {
         _timer.stop();
+        _noticeTimer.stop();
     }
 
     function onTimer() {
@@ -68,6 +70,27 @@ class TennisMatchView extends WatchUi.View {
 
     function requestRedraw() {
         refreshCache();
+        updateClockTimer();
+        WatchUi.requestUpdate();
+    }
+
+    function updateClockTimer() {
+        _timer.stop();
+
+        if (!_engine.getState().matchFinished) {
+            _timer.start(method(:onTimer), 5000, true);
+        }
+    }
+
+    function showNotice(message) {
+        _noticeText = message;
+        _noticeTimer.stop();
+        _noticeTimer.start(method(:clearNotice), 3000, false);
+        WatchUi.requestUpdate();
+    }
+
+    function clearNotice() {
+        _noticeText = null;
         WatchUi.requestUpdate();
     }
 
@@ -85,6 +108,7 @@ class TennisMatchView extends WatchUi.View {
         drawDivider(dc, width, centerX);
         drawPlayerScore(dc, centerX, state);
         drawFooter(dc, height, centerX, state);
+        drawNotice(dc, width, centerX, centerY);
     }
 
     function drawFace(dc, width, height, centerX, centerY) {
@@ -110,9 +134,10 @@ class TennisMatchView extends WatchUi.View {
         // Note: I'm using the widened X-coordinates (100) here, but adjust to 136 if you kept the original narrow layout.
         dc.drawText(100, 62, Graphics.FONT_XTINY, caloriesText(state), Graphics.TEXT_JUSTIFY_CENTER);
 
-        // Only show the badge if the match is finished
         if (state.matchFinished) {
             dc.drawText(centerX, 62, Graphics.FONT_XTINY, stageBadgeText(state), Graphics.TEXT_JUSTIFY_CENTER);
+        } else {
+            drawServeSideIndicator(dc, centerX, 66, state);
         }
 
         dc.drawText(width - 100, 62, Graphics.FONT_XTINY, batteryText(), Graphics.TEXT_JUSTIFY_CENTER);
@@ -192,6 +217,43 @@ class TennisMatchView extends WatchUi.View {
         }
     }
 
+    function drawServeSideIndicator(dc, centerX, centerY, state) {
+        dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_TRANSPARENT);
+
+        if (isGoldenPoint(state)) {
+            drawServeArrow(dc, centerX - 16, centerY, -1);
+            drawServeArrow(dc, centerX + 16, centerY, 1);
+            return;
+        }
+
+        if (((state.playerPoints + state.opponentPoints) % 2) == 0) {
+            drawServeArrow(dc, centerX, centerY, -1);
+        } else {
+            drawServeArrow(dc, centerX, centerY, 1);
+        }
+    }
+
+    function drawServeArrow(dc, x, y, direction) {
+        if (direction < 0) {
+            dc.fillRectangle(x - 11, y - 2, 4, 4);
+            dc.fillRectangle(x - 7, y - 6, 4, 4);
+            dc.fillRectangle(x - 7, y + 2, 4, 4);
+            dc.fillRectangle(x - 3, y - 2, 16, 4);
+            return;
+        }
+
+        dc.fillRectangle(x - 13, y - 2, 16, 4);
+        dc.fillRectangle(x + 3, y - 6, 4, 4);
+        dc.fillRectangle(x + 3, y + 2, 4, 4);
+        dc.fillRectangle(x + 7, y - 2, 4, 4);
+    }
+
+    function isGoldenPoint(state) {
+        return (state.stage == StageType.GOLDEN_GAME || _engine.getSettings().goldenPoint) &&
+            state.playerPoints == 3 &&
+            state.opponentPoints == 3;
+    }
+
     function drawFooter(dc, height, centerX, state) {
         var text = footerText(state);
         var color = footerColor(state);
@@ -199,6 +261,26 @@ class TennisMatchView extends WatchUi.View {
         dc.setColor(color, Graphics.COLOR_TRANSPARENT);
         // Moved duration Y-coordinate UP from height - 48 to height - 64
         dc.drawText(centerX, height - 64, Graphics.FONT_SMALL, text, Graphics.TEXT_JUSTIFY_CENTER);
+    }
+
+    function drawNotice(dc, width, centerX, centerY) {
+        if (_noticeText == null) {
+            return;
+        }
+
+        var boxWidth = width - 96;
+        var boxHeight = 72;
+        var boxX = 48;
+        var boxY = centerY - (boxHeight / 2);
+
+        dc.setColor(COLOR_WARNING, COLOR_WARNING);
+        dc.fillRoundedRectangle(boxX, boxY, boxWidth, boxHeight, 6);
+
+        dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_BLACK);
+        dc.fillRoundedRectangle(boxX + 4, boxY + 4, boxWidth - 8, boxHeight - 8, 4);
+
+        dc.setColor(COLOR_WARNING, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(centerX, boxY + 18, Graphics.FONT_MEDIUM, _noticeText, Graphics.TEXT_JUSTIFY_CENTER);
     }
 
     function drawCenteredText(dc, x, centerY, font, text) {

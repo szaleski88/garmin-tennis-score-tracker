@@ -14,6 +14,28 @@ class MatchState {
     var finishedAt;
     var calorieBaseline;
     var calorieFinished;
+    var playerTotalPoints;
+    var opponentTotalPoints;
+    var playerTotalGames;
+    var opponentTotalGames;
+    var playerBreakPointChances;
+    var playerBreakPointsWon;
+    var opponentBreakPointChances;
+    var opponentBreakPointsWon;
+    var playerServicePointsPlayed;
+    var playerServicePointsWon;
+    var opponentServicePointsPlayed;
+    var opponentServicePointsWon;
+    var currentPointStreakWinner;
+    var currentPointStreak;
+    var longestPlayerPointStreak;
+    var longestOpponentPointStreak;
+    var currentGameStreakWinner;
+    var currentGameStreak;
+    var longestPlayerGameStreak;
+    var longestOpponentGameStreak;
+    var maxPlayerPointLead;
+    var maxOpponentPointLead;
 
     function initialize() {
         playerSets = 0;
@@ -31,6 +53,28 @@ class MatchState {
         finishedAt = null;
         calorieBaseline = null;
         calorieFinished = null;
+        playerTotalPoints = 0;
+        opponentTotalPoints = 0;
+        playerTotalGames = 0;
+        opponentTotalGames = 0;
+        playerBreakPointChances = 0;
+        playerBreakPointsWon = 0;
+        opponentBreakPointChances = 0;
+        opponentBreakPointsWon = 0;
+        playerServicePointsPlayed = 0;
+        playerServicePointsWon = 0;
+        opponentServicePointsPlayed = 0;
+        opponentServicePointsWon = 0;
+        currentPointStreakWinner = 0;
+        currentPointStreak = 0;
+        longestPlayerPointStreak = 0;
+        longestOpponentPointStreak = 0;
+        currentGameStreakWinner = 0;
+        currentGameStreak = 0;
+        longestPlayerGameStreak = 0;
+        longestOpponentGameStreak = 0;
+        maxPlayerPointLead = 0;
+        maxOpponentPointLead = 0;
     }
 
     function clone() {
@@ -50,6 +94,28 @@ class MatchState {
         copy.finishedAt = finishedAt;
         copy.calorieBaseline = calorieBaseline;
         copy.calorieFinished = calorieFinished;
+        copy.playerTotalPoints = playerTotalPoints;
+        copy.opponentTotalPoints = opponentTotalPoints;
+        copy.playerTotalGames = playerTotalGames;
+        copy.opponentTotalGames = opponentTotalGames;
+        copy.playerBreakPointChances = playerBreakPointChances;
+        copy.playerBreakPointsWon = playerBreakPointsWon;
+        copy.opponentBreakPointChances = opponentBreakPointChances;
+        copy.opponentBreakPointsWon = opponentBreakPointsWon;
+        copy.playerServicePointsPlayed = playerServicePointsPlayed;
+        copy.playerServicePointsWon = playerServicePointsWon;
+        copy.opponentServicePointsPlayed = opponentServicePointsPlayed;
+        copy.opponentServicePointsWon = opponentServicePointsWon;
+        copy.currentPointStreakWinner = currentPointStreakWinner;
+        copy.currentPointStreak = currentPointStreak;
+        copy.longestPlayerPointStreak = longestPlayerPointStreak;
+        copy.longestOpponentPointStreak = longestOpponentPointStreak;
+        copy.currentGameStreakWinner = currentGameStreakWinner;
+        copy.currentGameStreak = currentGameStreak;
+        copy.longestPlayerGameStreak = longestPlayerGameStreak;
+        copy.longestOpponentGameStreak = longestOpponentGameStreak;
+        copy.maxPlayerPointLead = maxPlayerPointLead;
+        copy.maxOpponentPointLead = maxOpponentPointLead;
         return copy;
     }
 
@@ -69,7 +135,29 @@ class MatchState {
             "startedAt" => startedAt,
             "finishedAt" => finishedAt,
             "calorieBaseline" => calorieBaseline,
-            "calorieFinished" => calorieFinished
+            "calorieFinished" => calorieFinished,
+            "playerTotalPoints" => playerTotalPoints,
+            "opponentTotalPoints" => opponentTotalPoints,
+            "playerTotalGames" => playerTotalGames,
+            "opponentTotalGames" => opponentTotalGames,
+            "playerBreakPointChances" => playerBreakPointChances,
+            "playerBreakPointsWon" => playerBreakPointsWon,
+            "opponentBreakPointChances" => opponentBreakPointChances,
+            "opponentBreakPointsWon" => opponentBreakPointsWon,
+            "playerServicePointsPlayed" => playerServicePointsPlayed,
+            "playerServicePointsWon" => playerServicePointsWon,
+            "opponentServicePointsPlayed" => opponentServicePointsPlayed,
+            "opponentServicePointsWon" => opponentServicePointsWon,
+            "currentPointStreakWinner" => currentPointStreakWinner,
+            "currentPointStreak" => currentPointStreak,
+            "longestPlayerPointStreak" => longestPlayerPointStreak,
+            "longestOpponentPointStreak" => longestOpponentPointStreak,
+            "currentGameStreakWinner" => currentGameStreakWinner,
+            "currentGameStreak" => currentGameStreak,
+            "longestPlayerGameStreak" => longestPlayerGameStreak,
+            "longestOpponentGameStreak" => longestOpponentGameStreak,
+            "maxPlayerPointLead" => maxPlayerPointLead,
+            "maxOpponentPointLead" => maxOpponentPointLead
         };
     }
 
@@ -89,7 +177,29 @@ class MatchState {
             startedAt,
             finishedAt,
             calorieBaseline,
-            calorieFinished
+            calorieFinished,
+            playerTotalPoints,
+            opponentTotalPoints,
+            playerTotalGames,
+            opponentTotalGames,
+            playerBreakPointChances,
+            playerBreakPointsWon,
+            opponentBreakPointChances,
+            opponentBreakPointsWon,
+            playerServicePointsPlayed,
+            playerServicePointsWon,
+            opponentServicePointsPlayed,
+            opponentServicePointsWon,
+            currentPointStreakWinner,
+            currentPointStreak,
+            longestPlayerPointStreak,
+            longestOpponentPointStreak,
+            currentGameStreakWinner,
+            currentGameStreak,
+            longestPlayerGameStreak,
+            longestOpponentGameStreak,
+            maxPlayerPointLead,
+            maxOpponentPointLead
         ];
     }
 
@@ -145,6 +255,72 @@ class MatchState {
         if (data.hasKey("calorieFinished")) {
             state.calorieFinished = data["calorieFinished"];
         }
+        if (data.hasKey("playerTotalPoints")) {
+            state.playerTotalPoints = data["playerTotalPoints"];
+        }
+        if (data.hasKey("opponentTotalPoints")) {
+            state.opponentTotalPoints = data["opponentTotalPoints"];
+        }
+        if (data.hasKey("playerTotalGames")) {
+            state.playerTotalGames = data["playerTotalGames"];
+        }
+        if (data.hasKey("opponentTotalGames")) {
+            state.opponentTotalGames = data["opponentTotalGames"];
+        }
+        if (data.hasKey("playerBreakPointChances")) {
+            state.playerBreakPointChances = data["playerBreakPointChances"];
+        }
+        if (data.hasKey("playerBreakPointsWon")) {
+            state.playerBreakPointsWon = data["playerBreakPointsWon"];
+        }
+        if (data.hasKey("opponentBreakPointChances")) {
+            state.opponentBreakPointChances = data["opponentBreakPointChances"];
+        }
+        if (data.hasKey("opponentBreakPointsWon")) {
+            state.opponentBreakPointsWon = data["opponentBreakPointsWon"];
+        }
+        if (data.hasKey("playerServicePointsPlayed")) {
+            state.playerServicePointsPlayed = data["playerServicePointsPlayed"];
+        }
+        if (data.hasKey("playerServicePointsWon")) {
+            state.playerServicePointsWon = data["playerServicePointsWon"];
+        }
+        if (data.hasKey("opponentServicePointsPlayed")) {
+            state.opponentServicePointsPlayed = data["opponentServicePointsPlayed"];
+        }
+        if (data.hasKey("opponentServicePointsWon")) {
+            state.opponentServicePointsWon = data["opponentServicePointsWon"];
+        }
+        if (data.hasKey("currentPointStreakWinner")) {
+            state.currentPointStreakWinner = data["currentPointStreakWinner"];
+        }
+        if (data.hasKey("currentPointStreak")) {
+            state.currentPointStreak = data["currentPointStreak"];
+        }
+        if (data.hasKey("longestPlayerPointStreak")) {
+            state.longestPlayerPointStreak = data["longestPlayerPointStreak"];
+        }
+        if (data.hasKey("longestOpponentPointStreak")) {
+            state.longestOpponentPointStreak = data["longestOpponentPointStreak"];
+        }
+        if (data.hasKey("currentGameStreakWinner")) {
+            state.currentGameStreakWinner = data["currentGameStreakWinner"];
+        }
+        if (data.hasKey("currentGameStreak")) {
+            state.currentGameStreak = data["currentGameStreak"];
+        }
+        if (data.hasKey("longestPlayerGameStreak")) {
+            state.longestPlayerGameStreak = data["longestPlayerGameStreak"];
+        }
+        if (data.hasKey("longestOpponentGameStreak")) {
+            state.longestOpponentGameStreak = data["longestOpponentGameStreak"];
+        }
+        if (data.hasKey("maxPlayerPointLead")) {
+            state.maxPlayerPointLead = data["maxPlayerPointLead"];
+        }
+        if (data.hasKey("maxOpponentPointLead")) {
+            state.maxOpponentPointLead = data["maxOpponentPointLead"];
+        }
 
         return state;
     }
@@ -179,6 +355,72 @@ class MatchState {
         }
         if (data.size() > 14) {
             state.calorieFinished = data[14];
+        }
+        if (data.size() > 15) {
+            state.playerTotalPoints = data[15];
+        }
+        if (data.size() > 16) {
+            state.opponentTotalPoints = data[16];
+        }
+        if (data.size() > 17) {
+            state.playerTotalGames = data[17];
+        }
+        if (data.size() > 18) {
+            state.opponentTotalGames = data[18];
+        }
+        if (data.size() > 19) {
+            state.playerBreakPointChances = data[19];
+        }
+        if (data.size() > 20) {
+            state.playerBreakPointsWon = data[20];
+        }
+        if (data.size() > 21) {
+            state.opponentBreakPointChances = data[21];
+        }
+        if (data.size() > 22) {
+            state.opponentBreakPointsWon = data[22];
+        }
+        if (data.size() > 23) {
+            state.playerServicePointsPlayed = data[23];
+        }
+        if (data.size() > 24) {
+            state.playerServicePointsWon = data[24];
+        }
+        if (data.size() > 25) {
+            state.opponentServicePointsPlayed = data[25];
+        }
+        if (data.size() > 26) {
+            state.opponentServicePointsWon = data[26];
+        }
+        if (data.size() > 27) {
+            state.currentPointStreakWinner = data[27];
+        }
+        if (data.size() > 28) {
+            state.currentPointStreak = data[28];
+        }
+        if (data.size() > 29) {
+            state.longestPlayerPointStreak = data[29];
+        }
+        if (data.size() > 30) {
+            state.longestOpponentPointStreak = data[30];
+        }
+        if (data.size() > 31) {
+            state.currentGameStreakWinner = data[31];
+        }
+        if (data.size() > 32) {
+            state.currentGameStreak = data[32];
+        }
+        if (data.size() > 33) {
+            state.longestPlayerGameStreak = data[33];
+        }
+        if (data.size() > 34) {
+            state.longestOpponentGameStreak = data[34];
+        }
+        if (data.size() > 35) {
+            state.maxPlayerPointLead = data[35];
+        }
+        if (data.size() > 36) {
+            state.maxOpponentPointLead = data[36];
         }
 
         return state;

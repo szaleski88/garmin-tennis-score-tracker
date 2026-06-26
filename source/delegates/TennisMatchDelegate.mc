@@ -1,4 +1,5 @@
 using Toybox.System;
+using Toybox.Timer;
 using Toybox.WatchUi;
 
 class TennisMatchDelegate extends WatchUi.BehaviorDelegate {
@@ -7,12 +8,16 @@ class TennisMatchDelegate extends WatchUi.BehaviorDelegate {
     var _engine;
     var _view;
     var _exitConfirmationOpen;
+    var _statsConfirmationOpen;
+    var _statsTimer;
 
     function initialize(engine, view) {
         BehaviorDelegate.initialize();
         _engine = engine;
         _view = view;
         _exitConfirmationOpen = false;
+        _statsConfirmationOpen = false;
+        _statsTimer = new Timer.Timer();
     }
 
     // --- Screen Taps ---
@@ -86,7 +91,7 @@ class TennisMatchDelegate extends WatchUi.BehaviorDelegate {
 
     // --- System Behaviors ---
     function onBack() {
-        return showExitConfirmation();
+        return scorePlayerPoint();
     }
 
     function onMenu() {
@@ -102,26 +107,63 @@ class TennisMatchDelegate extends WatchUi.BehaviorDelegate {
     }
 
     function redoPoint() {
+        var wasFinished = _engine.getState().matchFinished;
+
         if (_engine.redo()) {
             _view.requestRedraw();
+
+            if (!wasFinished && _engine.getState().matchFinished) {
+                return showStatsConfirmation();
+            }
         }
         return true;
     }
 
     function scoreOpponentPoint() {
-        _engine.scoreOpponent();
-        _view.requestRedraw();
-        return true;
+        return scorePoint(false);
     }
 
     function scorePlayerPoint() {
-        _engine.scorePlayer();
+        return scorePoint(true);
+    }
+
+    function scorePoint(playerWonPoint) {
+        var result = playerWonPoint ? _engine.scorePlayer() : _engine.scoreOpponent();
         _view.requestRedraw();
+
+        if (result == MatchResult.SIDE_SWAP) {
+            _view.showNotice("SWITCH SIDES");
+        } else if (result == MatchResult.MATCH) {
+            return showStatsConfirmation();
+        }
+
         return true;
     }
 
     function exitConfirmationClosed() {
         _exitConfirmationOpen = false;
+    }
+
+    function statsConfirmationClosed(showStats) {
+        _statsConfirmationOpen = false;
+
+        if (showStats) {
+            _statsTimer.stop();
+            _statsTimer.start(method(:showStatsView), 250, false);
+            return;
+        }
+
+        if (_engine.undo()) {
+            _view.requestRedraw();
+        }
+    }
+
+    function showStatsView() {
+        WatchUi.pushView(
+            new MatchStatsView(_engine),
+            new MatchStatsDelegate(),
+            WatchUi.SLIDE_LEFT
+        );
     }
 
     function showExitConfirmation() {
@@ -135,6 +177,22 @@ class TennisMatchDelegate extends WatchUi.BehaviorDelegate {
             new WatchUi.Confirmation("Exit Match?"),
             new ExitMatchConfirmationDelegate(self),
             WatchUi.SLIDE_RIGHT
+        );
+
+        return true;
+    }
+
+    function showStatsConfirmation() {
+        if (_statsConfirmationOpen) {
+            return true;
+        }
+
+        _statsConfirmationOpen = true;
+
+        WatchUi.pushView(
+            new WatchUi.Confirmation("Show Stats?"),
+            new MatchStatsConfirmationDelegate(self),
+            WatchUi.SLIDE_LEFT
         );
 
         return true;
@@ -158,6 +216,23 @@ class ExitMatchConfirmationDelegate extends WatchUi.ConfirmationDelegate {
             System.exit();
         }
         // FIX: Removed the manual popView. Garmin auto-dismisses Confirmations!
+        return true;
+    }
+}
+
+class MatchStatsConfirmationDelegate extends WatchUi.ConfirmationDelegate {
+    var _matchDelegate;
+
+    function initialize(matchDelegate) {
+        ConfirmationDelegate.initialize();
+        _matchDelegate = matchDelegate;
+    }
+
+    function onResponse(response) {
+        if (_matchDelegate != null) {
+            _matchDelegate.statsConfirmationClosed(response == WatchUi.CONFIRM_YES);
+        }
+
         return true;
     }
 }

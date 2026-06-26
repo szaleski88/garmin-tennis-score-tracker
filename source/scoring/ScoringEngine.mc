@@ -89,11 +89,22 @@ class ScoringEngine {
         pushSnapshot();
         clearRedoHistory();
 
+        var breakPointForPlayer = isBreakPointFor(true);
+        var breakPointForOpponent = isBreakPointFor(false);
+        var playerServedPoint = _state.playerServing;
+
         if (playerWonPoint) {
             _state.playerPoints++;
+            _state.playerTotalPoints++;
         } else {
             _state.opponentPoints++;
+            _state.opponentTotalPoints++;
         }
+
+        recordServicePoint(playerWonPoint, playerServedPoint);
+        recordBreakPoint(playerWonPoint, breakPointForPlayer, breakPointForOpponent);
+        recordPointStreak(playerWonPoint);
+        recordPointLead();
 
         var result = evaluatePoint(playerWonPoint);
         PersistenceManager.saveMatch(self);
@@ -166,6 +177,117 @@ class ScoringEngine {
         _redoHistory = [];
     }
 
+    function isBreakPointFor(player) {
+        if (_state.stage != StageType.GAME && _state.stage != StageType.GOLDEN_GAME) {
+            return false;
+        }
+
+        if (player && _state.playerServing) {
+            return false;
+        }
+
+        if (!player && !_state.playerServing) {
+            return false;
+        }
+
+        return pointWouldWinCurrentGame(player);
+    }
+
+    function pointWouldWinCurrentGame(playerWonPoint) {
+        var winnerPoints = playerWonPoint ? _state.playerPoints + 1 : _state.opponentPoints + 1;
+        var loserPoints = playerWonPoint ? _state.opponentPoints : _state.playerPoints;
+
+        if (_state.stage == StageType.GOLDEN_GAME) {
+            return winnerPoints >= 4;
+        }
+
+        if (_state.stage == StageType.GAME) {
+            return winnerPoints >= 4 && winnerPoints >= loserPoints + 2;
+        }
+
+        return false;
+    }
+
+    function recordBreakPoint(playerWonPoint, breakPointForPlayer, breakPointForOpponent) {
+        if (breakPointForPlayer) {
+            _state.playerBreakPointChances++;
+
+            if (playerWonPoint) {
+                _state.playerBreakPointsWon++;
+            }
+        }
+
+        if (breakPointForOpponent) {
+            _state.opponentBreakPointChances++;
+
+            if (!playerWonPoint) {
+                _state.opponentBreakPointsWon++;
+            }
+        }
+    }
+
+    function recordServicePoint(playerWonPoint, playerServedPoint) {
+        if (playerServedPoint) {
+            _state.playerServicePointsPlayed++;
+
+            if (playerWonPoint) {
+                _state.playerServicePointsWon++;
+            }
+
+            return;
+        }
+
+        _state.opponentServicePointsPlayed++;
+
+        if (!playerWonPoint) {
+            _state.opponentServicePointsWon++;
+        }
+    }
+
+    function recordPointStreak(playerWonPoint) {
+        var winner = playerWonPoint ? 1 : 2;
+
+        if (_state.currentPointStreakWinner == winner) {
+            _state.currentPointStreak++;
+        } else {
+            _state.currentPointStreakWinner = winner;
+            _state.currentPointStreak = 1;
+        }
+
+        if (winner == 1 && _state.currentPointStreak > _state.longestPlayerPointStreak) {
+            _state.longestPlayerPointStreak = _state.currentPointStreak;
+        } else if (winner == 2 && _state.currentPointStreak > _state.longestOpponentPointStreak) {
+            _state.longestOpponentPointStreak = _state.currentPointStreak;
+        }
+    }
+
+    function recordPointLead() {
+        var lead = _state.playerTotalPoints - _state.opponentTotalPoints;
+
+        if (lead > _state.maxPlayerPointLead) {
+            _state.maxPlayerPointLead = lead;
+        } else if ((lead * -1) > _state.maxOpponentPointLead) {
+            _state.maxOpponentPointLead = lead * -1;
+        }
+    }
+
+    function recordGameStreak(playerWonGame) {
+        var winner = playerWonGame ? 1 : 2;
+
+        if (_state.currentGameStreakWinner == winner) {
+            _state.currentGameStreak++;
+        } else {
+            _state.currentGameStreakWinner = winner;
+            _state.currentGameStreak = 1;
+        }
+
+        if (winner == 1 && _state.currentGameStreak > _state.longestPlayerGameStreak) {
+            _state.longestPlayerGameStreak = _state.currentGameStreak;
+        } else if (winner == 2 && _state.currentGameStreak > _state.longestOpponentGameStreak) {
+            _state.longestOpponentGameStreak = _state.currentGameStreak;
+        }
+    }
+
     function stateStackToStorage(stack) {
         var data = [];
 
@@ -184,8 +306,12 @@ class ScoringEngine {
 
     function evaluatePoint(playerWonPoint) {
         if (!stageHasWinner(playerWonPoint)) {
-            if (_state.stage == StageType.TIE_BREAK || _state.stage == StageType.SUPER_TIE_BREAK) {
+            if (isTieBreakStage()) {
                 _state.playerServing = tieBreakServerForNextPoint();
+
+                if (sideSwapDue()) {
+                    return MatchResult.SIDE_SWAP;
+                }
             }
             return MatchResult.POINT;
         }
@@ -246,9 +372,13 @@ class ScoringEngine {
     function awardGame(playerWonPoint) {
         if (playerWonPoint) {
             _state.playerGames++;
+            _state.playerTotalGames++;
         } else {
             _state.opponentGames++;
+            _state.opponentTotalGames++;
         }
+
+        recordGameStreak(playerWonPoint);
 
         _state.playerPoints = 0;
         _state.opponentPoints = 0;
@@ -353,6 +483,20 @@ class ScoringEngine {
         return !_state.tieBreakStarterPlayerServing;
     }
 
+    function isTieBreakStage() {
+        return _state.stage == StageType.TIE_BREAK ||
+            _state.stage == StageType.SUPER_TIE_BREAK;
+    }
+
+    function sideSwapDue() {
+        if (!isTieBreakStage()) {
+            return false;
+        }
+
+        var played = _state.playerPoints + _state.opponentPoints;
+        return played > 0 && (played % 6) == 0;
+    }
+
     function vibrateFor(result) {
         if (!(Attention has :vibrate)) {
             return;
@@ -360,6 +504,14 @@ class ScoringEngine {
 
         if (result == MatchResult.POINT) {
             Attention.vibrate([new Attention.VibeProfile(35, 80)]);
+        } else if (result == MatchResult.SIDE_SWAP) {
+            Attention.vibrate([
+                new Attention.VibeProfile(90, 220),
+                new Attention.VibeProfile(0, 90),
+                new Attention.VibeProfile(90, 220),
+                new Attention.VibeProfile(0, 90),
+                new Attention.VibeProfile(90, 260)
+            ]);
         } else if (result == MatchResult.GAME) {
             Attention.vibrate([
                 new Attention.VibeProfile(55, 70),

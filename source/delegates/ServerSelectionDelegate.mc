@@ -11,10 +11,11 @@ class ServerSelectionDelegate extends WatchUi.Menu2InputDelegate {
     function onSelect(item) {
         var id = item.getId();
         var playerServesFirst = id.equals("me");
-        var engine = new ScoringEngine(_settings, playerServesFirst);
-        var view = new TennisMatchView(engine);
 
-        PersistenceManager.saveMatch(engine);
-        WatchUi.pushView(view, new TennisMatchDelegate(engine, view), WatchUi.SLIDE_LEFT);
+        WatchUi.pushView(
+            new RulesConfirmationView(_settings, playerServesFirst),
+            new RulesConfirmationDelegate(_settings, playerServesFirst),
+            WatchUi.SLIDE_LEFT
+        );
     }
 }

@@ -4,4 +4,5 @@ module MatchResult {
     const GAME = 2;
     const SET = 3;
     const MATCH = 4;
+    const SIDE_SWAP = 5;
 }
