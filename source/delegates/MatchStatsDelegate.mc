@@ -6,6 +6,5 @@ class MatchStatsDelegate extends WatchUi.Menu2InputDelegate {
     }
 
     function onSelect(item) {
-        return true;
     }
 }

@@ -18,8 +18,6 @@ class RulesConfirmationDelegate extends WatchUi.Menu2InputDelegate {
         } else if (id.equals("cancel")) {
             WatchUi.popView(WatchUi.SLIDE_RIGHT);
         }
-
-        return true;
     }
 
     function startMatch() {
