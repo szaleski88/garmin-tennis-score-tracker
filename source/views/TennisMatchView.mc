@@ -15,6 +15,12 @@ class TennisMatchView extends WatchUi.View {
     static const COLOR_BALL = 0xE9F400;
     static const COLOR_DIM = 0x5C5C5C;
     static const COLOR_WARNING = 0xFFEA00;
+    static const OPPONENT_MARKER_LEFT_X = 90;
+    static const OPPONENT_MARKER_RIGHT_X = 304;
+    static const OPPONENT_MARKER_Y = 168;
+    static const PLAYER_MARKER_LEFT_X = 112;
+    static const PLAYER_MARKER_RIGHT_X = 260;
+    static const PLAYER_MARKER_Y = 304;
 
     var _engine;
     var _ball;
@@ -136,8 +142,6 @@ class TennisMatchView extends WatchUi.View {
 
         if (state.matchFinished) {
             dc.drawText(centerX, 62, Graphics.FONT_XTINY, stageBadgeText(state), Graphics.TEXT_JUSTIFY_CENTER);
-        } else {
-            drawServeSideIndicator(dc, centerX, 66, state);
         }
 
         dc.drawText(width - 100, 62, Graphics.FONT_XTINY, batteryText(), Graphics.TEXT_JUSTIFY_CENTER);
@@ -166,8 +170,7 @@ class TennisMatchView extends WatchUi.View {
         drawSideNumber(dc, 356, 156, state.opponentGames, sideColor == null ? COLOR_GAME : sideColor);
 
         if (!state.playerServing && !state.matchFinished) {
-            // Shifted left from 112 to 90
-            drawServingMarker(dc, 90, 168);
+            drawServingSideMarkers(dc, OPPONENT_MARKER_LEFT_X, OPPONENT_MARKER_RIGHT_X, OPPONENT_MARKER_Y, state);
         }
     }
 
@@ -194,7 +197,7 @@ class TennisMatchView extends WatchUi.View {
         dc.drawText(292, 304, Graphics.FONT_SMALL, "ME", Graphics.TEXT_JUSTIFY_LEFT);
 
         if (state.playerServing && !state.matchFinished) {
-            drawServingMarker(dc, 112, 304);
+            drawServingSideMarkers(dc, PLAYER_MARKER_LEFT_X, PLAYER_MARKER_RIGHT_X, PLAYER_MARKER_Y, state);
         }
     }
 
@@ -217,35 +220,18 @@ class TennisMatchView extends WatchUi.View {
         }
     }
 
-    function drawServeSideIndicator(dc, centerX, centerY, state) {
-        dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_TRANSPARENT);
-
+    function drawServingSideMarkers(dc, leftX, rightX, y, state) {
         if (isGoldenPoint(state)) {
-            drawServeArrow(dc, centerX - 16, centerY, -1);
-            drawServeArrow(dc, centerX + 16, centerY, 1);
+            drawServingMarker(dc, leftX, y);
+            drawServingMarker(dc, rightX, y);
             return;
         }
 
         if (((state.playerPoints + state.opponentPoints) % 2) == 0) {
-            drawServeArrow(dc, centerX, centerY, -1);
+            drawServingMarker(dc, leftX, y);
         } else {
-            drawServeArrow(dc, centerX, centerY, 1);
+            drawServingMarker(dc, rightX, y);
         }
-    }
-
-    function drawServeArrow(dc, x, y, direction) {
-        if (direction < 0) {
-            dc.fillRectangle(x - 11, y - 2, 4, 4);
-            dc.fillRectangle(x - 7, y - 6, 4, 4);
-            dc.fillRectangle(x - 7, y + 2, 4, 4);
-            dc.fillRectangle(x - 3, y - 2, 16, 4);
-            return;
-        }
-
-        dc.fillRectangle(x - 13, y - 2, 16, 4);
-        dc.fillRectangle(x + 3, y - 6, 4, 4);
-        dc.fillRectangle(x + 3, y + 2, 4, 4);
-        dc.fillRectangle(x + 7, y - 2, 4, 4);
     }
 
     function isGoldenPoint(state) {

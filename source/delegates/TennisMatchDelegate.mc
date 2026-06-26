@@ -44,12 +44,10 @@ class TennisMatchDelegate extends WatchUi.BehaviorDelegate {
     }
 
     function handleSwipe(direction) {
-        if (direction == WatchUi.SWIPE_RIGHT) {
+        if (direction == WatchUi.SWIPE_RIGHT || direction == WatchUi.SWIPE_DOWN) {
             return showExitConfirmation();
         } else if (direction == WatchUi.SWIPE_LEFT) {
             return undoPoint();
-        } else if (direction == WatchUi.SWIPE_DOWN) {
-            return redoPoint();
         } else if (direction == WatchUi.SWIPE_UP) {
             // Mapping Swipe Up to Undo as well for extra forgiveness
             return undoPoint();
@@ -61,7 +59,7 @@ class TennisMatchDelegate extends WatchUi.BehaviorDelegate {
     // --- Native Swipe Behaviors (Fallbacks if Garmin ignores raw swipe) ---
     function onPreviousPage() {
         // Garmin natively maps Swipe Down to this
-        return redoPoint();
+        return showExitConfirmation();
     }
 
     function onNextPage() {
