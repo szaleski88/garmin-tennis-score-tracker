@@ -228,9 +228,9 @@ class TennisMatchView extends WatchUi.View {
         }
 
         if (((state.playerPoints + state.opponentPoints) % 2) == 0) {
-            drawServingMarker(dc, leftX, y);
-        } else {
             drawServingMarker(dc, rightX, y);
+        } else {
+            drawServingMarker(dc, leftX, y);
         }
     }
 
