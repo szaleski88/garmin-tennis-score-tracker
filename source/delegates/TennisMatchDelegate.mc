@@ -99,6 +99,7 @@ class TennisMatchDelegate extends WatchUi.BehaviorDelegate {
     // --- Game Actions ---
     function undoPoint() {
         if (_engine.undo()) {
+            _view.clearNotice();
             _view.requestRedraw();
         }
         return true;
@@ -108,6 +109,7 @@ class TennisMatchDelegate extends WatchUi.BehaviorDelegate {
         var wasFinished = _engine.getState().matchFinished;
 
         if (_engine.redo()) {
+            _view.clearNotice();
             _view.requestRedraw();
 
             if (!wasFinished && _engine.getState().matchFinished) {
@@ -129,9 +131,11 @@ class TennisMatchDelegate extends WatchUi.BehaviorDelegate {
         var result = playerWonPoint ? _engine.scorePlayer() : _engine.scoreOpponent();
         _view.requestRedraw();
 
-        if (result == MatchResult.SIDE_SWAP) {
-            _view.showNotice("SWITCH SIDES");
-        } else if (result == MatchResult.MATCH) {
+        if (result == MatchResult.SIDE_SWAP || _engine.sideSwapTriggered()) {
+            _view.showNotice("SWAP SIDES");
+        }
+
+        if (result == MatchResult.MATCH) {
             return showStatsConfirmation();
         }
 

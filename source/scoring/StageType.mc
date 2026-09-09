@@ -4,4 +4,5 @@ module StageType {
     const TIE_BREAK = 2;
     const SUPER_TIE_BREAK = 3;
     const MATCH_FINISHED = 4;
+    const FINAL_SET_DECISION = 5;
 }

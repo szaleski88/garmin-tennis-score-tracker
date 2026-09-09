@@ -36,6 +36,8 @@ class MatchState {
     var longestOpponentGameStreak;
     var maxPlayerPointLead;
     var maxOpponentPointLead;
+    var selectedFinalSetMode;
+    var lastSideSwapPointCount;
 
     function initialize() {
         playerSets = 0;
@@ -75,6 +77,8 @@ class MatchState {
         longestOpponentGameStreak = 0;
         maxPlayerPointLead = 0;
         maxOpponentPointLead = 0;
+        selectedFinalSetMode = null;
+        lastSideSwapPointCount = 0;
     }
 
     function clone() {
@@ -116,6 +120,8 @@ class MatchState {
         copy.longestOpponentGameStreak = longestOpponentGameStreak;
         copy.maxPlayerPointLead = maxPlayerPointLead;
         copy.maxOpponentPointLead = maxOpponentPointLead;
+        copy.selectedFinalSetMode = selectedFinalSetMode;
+        copy.lastSideSwapPointCount = lastSideSwapPointCount;
         return copy;
     }
 
@@ -157,7 +163,9 @@ class MatchState {
             "longestPlayerGameStreak" => longestPlayerGameStreak,
             "longestOpponentGameStreak" => longestOpponentGameStreak,
             "maxPlayerPointLead" => maxPlayerPointLead,
-            "maxOpponentPointLead" => maxOpponentPointLead
+            "maxOpponentPointLead" => maxOpponentPointLead,
+            "selectedFinalSetMode" => selectedFinalSetMode,
+            "lastSideSwapPointCount" => lastSideSwapPointCount
         };
     }
 
@@ -199,7 +207,9 @@ class MatchState {
             longestPlayerGameStreak,
             longestOpponentGameStreak,
             maxPlayerPointLead,
-            maxOpponentPointLead
+            maxOpponentPointLead,
+            selectedFinalSetMode,
+            lastSideSwapPointCount
         ];
     }
 
@@ -321,6 +331,12 @@ class MatchState {
         if (data.hasKey("maxOpponentPointLead")) {
             state.maxOpponentPointLead = data["maxOpponentPointLead"];
         }
+        if (data.hasKey("selectedFinalSetMode")) {
+            state.selectedFinalSetMode = data["selectedFinalSetMode"];
+        }
+        if (data.hasKey("lastSideSwapPointCount")) {
+            state.lastSideSwapPointCount = data["lastSideSwapPointCount"];
+        }
 
         return state;
     }
@@ -421,6 +437,12 @@ class MatchState {
         }
         if (data.size() > 36) {
             state.maxOpponentPointLead = data[36];
+        }
+        if (data.size() > 37) {
+            state.selectedFinalSetMode = data[37];
+        }
+        if (data.size() > 38) {
+            state.lastSideSwapPointCount = data[38];
         }
 
         return state;

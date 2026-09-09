@@ -55,6 +55,9 @@ class SettingsDelegate extends WatchUi.Menu2InputDelegate {
             _settings.finalSetMode = FinalSetMode.TB;
         } else if (_settings.finalSetMode == FinalSetMode.TB) {
             _settings.finalSetMode = FinalSetMode.FULL_SET;
+        } else if (_settings.finalSetMode == FinalSetMode.FULL_SET &&
+            _settings.matchFormat == MatchFormat.BEST_OF_3) {
+            _settings.finalSetMode = FinalSetMode.DECIDE;
         } else {
             _settings.finalSetMode = FinalSetMode.STB;
         }
