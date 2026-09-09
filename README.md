@@ -17,7 +17,8 @@ Touch-first Garmin Connect IQ watch app for fast tennis scoring on the Venu 2 Pl
 - Match/settings/history recovery with `Toybox.Application.Storage`
 - Haptic patterns for point, game, set, and match events
 - Serve-side ball marker: left on even points, right on odd points, both at golden point
-- Triple haptic and "SWITCH SIDES" notice every six tie-break/super tie-break points
+- Triple haptic and "SWAP SIDES" notice after odd-numbered games and every six tie-break/super tie-break points
+- Optional deciding-set prompt at 1-1 to choose an STB or regular set from the score screen
 - Optional match-end stats for points, break points, streaks, service points, duration, and calories
 
 ## Project Layout

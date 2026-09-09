@@ -74,6 +74,10 @@ class ScoreFormatter {
             return "MATCH";
         }
 
+        if (state.stage == StageType.FINAL_SET_DECISION) {
+            return "DECIDE";
+        }
+
         if (state.stage == StageType.SUPER_TIE_BREAK) {
             return "STB";
         }
@@ -126,6 +130,8 @@ class ScoreFormatter {
             return "Full Set";
         } else if (settings.finalSetMode == FinalSetMode.TB) {
             return "TB";
+        } else if (settings.finalSetMode == FinalSetMode.DECIDE) {
+            return "DECIDE";
         }
 
         return "STB";

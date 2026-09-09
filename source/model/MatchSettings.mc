@@ -9,6 +9,7 @@ module FinalSetMode {
     const FULL_SET = 0;
     const TB = 1;
     const STB = 2;
+    const DECIDE = 3;
 }
 
 class MatchSettings {
