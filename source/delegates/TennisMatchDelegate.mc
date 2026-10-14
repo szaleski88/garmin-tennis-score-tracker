@@ -1,4 +1,3 @@
-using Toybox.System;
 using Toybox.Timer;
 using Toybox.WatchUi;
 
@@ -7,7 +6,7 @@ class TennisMatchDelegate extends WatchUi.BehaviorDelegate {
 
     var _engine;
     var _view;
-    var _exitConfirmationOpen;
+    var _pauseMenuOpen;
     var _statsConfirmationOpen;
     var _statsTimer;
 
@@ -15,7 +14,7 @@ class TennisMatchDelegate extends WatchUi.BehaviorDelegate {
         BehaviorDelegate.initialize();
         _engine = engine;
         _view = view;
-        _exitConfirmationOpen = false;
+        _pauseMenuOpen = false;
         _statsConfirmationOpen = false;
         _statsTimer = new Timer.Timer();
     }
@@ -45,7 +44,7 @@ class TennisMatchDelegate extends WatchUi.BehaviorDelegate {
 
     function handleSwipe(direction) {
         if (direction == WatchUi.SWIPE_RIGHT || direction == WatchUi.SWIPE_DOWN) {
-            return showExitConfirmation();
+            return showPauseMenu();
         } else if (direction == WatchUi.SWIPE_LEFT) {
             return undoPoint();
         } else if (direction == WatchUi.SWIPE_UP) {
@@ -59,7 +58,7 @@ class TennisMatchDelegate extends WatchUi.BehaviorDelegate {
     // --- Native Swipe Behaviors (Fallbacks if Garmin ignores raw swipe) ---
     function onPreviousPage() {
         // Garmin natively maps Swipe Down to this
-        return showExitConfirmation();
+        return showPauseMenu();
     }
 
     function onNextPage() {
@@ -138,8 +137,8 @@ class TennisMatchDelegate extends WatchUi.BehaviorDelegate {
         return true;
     }
 
-    function exitConfirmationClosed() {
-        _exitConfirmationOpen = false;
+    function pauseMenuClosed() {
+        _pauseMenuOpen = false;
     }
 
     function statsConfirmationClosed(showStats) {
@@ -157,24 +156,21 @@ class TennisMatchDelegate extends WatchUi.BehaviorDelegate {
     }
 
     function showStatsView() {
-        WatchUi.pushView(
-            new MatchStatsView(_engine),
-            new MatchStatsDelegate(),
-            WatchUi.SLIDE_LEFT
-        );
+        var statsView = new MatchStatsView(_engine);
+        WatchUi.pushView(statsView, new MatchStatsDelegate(statsView), WatchUi.SLIDE_LEFT);
     }
 
-    function showExitConfirmation() {
-        if (_exitConfirmationOpen) {
+    function showPauseMenu() {
+        if (_pauseMenuOpen) {
             return true;
         }
 
-        _exitConfirmationOpen = true;
+        _pauseMenuOpen = true;
 
         WatchUi.pushView(
-            new WatchUi.Confirmation("Exit Match?"),
-            new ExitMatchConfirmationDelegate(self),
-            WatchUi.SLIDE_RIGHT
+            new MatchPauseView(_engine),
+            new MatchPauseDelegate(_engine, self),
+            WatchUi.SLIDE_DOWN
         );
 
         return true;
@@ -193,27 +189,6 @@ class TennisMatchDelegate extends WatchUi.BehaviorDelegate {
             WatchUi.SLIDE_LEFT
         );
 
-        return true;
-    }
-}
-
-class ExitMatchConfirmationDelegate extends WatchUi.ConfirmationDelegate {
-    var _matchDelegate;
-
-    function initialize(matchDelegate) {
-        ConfirmationDelegate.initialize();
-        _matchDelegate = matchDelegate;
-    }
-
-    function onResponse(response) {
-        if (_matchDelegate != null) {
-            _matchDelegate.exitConfirmationClosed();
-        }
-
-        if (response == WatchUi.CONFIRM_YES) {
-            System.exit();
-        }
-        // FIX: Removed the manual popView. Garmin auto-dismisses Confirmations!
         return true;
     }
 }

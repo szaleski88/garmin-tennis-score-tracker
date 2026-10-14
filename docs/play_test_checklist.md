@@ -34,7 +34,9 @@
 - Score to 10-8.
 - Verify match ends only at 10 with two-point lead.
 - Decline the stats confirmation and verify the score returns to the point before match point.
-- Re-score match point, confirm stats, and verify final stats list opens.
+- Re-score match point, confirm stats, and verify the styled final comparison stats open.
+- Swipe up and verify the second final-stats page shows game streak, lead, duration, and calories.
+- Swipe down and verify the first final-stats page returns.
 
 ## Undo
 
@@ -58,8 +60,13 @@
 ## Recovery
 
 - Score at least one point.
-- Swipe right and confirm exit.
-- Repeat with a resumed match, then swipe down and confirm exit.
+- Swipe down and verify the match pause hub opens without changing the score.
+- Open current stats and verify points, service points, break points, point streak, and game streak compare Me with OP.
+- Close current stats and verify the pause hub returns instead of the scoring screen.
+- Resume and verify scoring continues from the unchanged score.
+- Reopen the pause hub, choose Exit match, then choose Keep playing and verify the pause hub returns.
+- Choose Exit match again and confirm exit.
+- Repeat with a resumed match using swipe right to open the pause hub.
 - Reopen app.
 - Verify Resume Match appears.
 - Resume and confirm score/settings/history restored.

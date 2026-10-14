@@ -8,7 +8,7 @@ Touch-first Garmin Connect IQ watch app for fast tennis scoring on the Venu 2 Pl
 - Pure black match screen with large score text
 - Top-half tap scores opponent, bottom-half tap scores player
 - Upper hardware button scores opponent, lower button scores player, middle button undoes the last point
-- Swipe right or down opens exit confirmation
+- Swipe right or down opens a match pause hub with current stats, resume, and exit actions
 - Best-of-3, best-of-5, tie-break-only, super-tie-break-only formats
 - Normal, no-ad, tie-break, super tie-break, short-set rules via settings
 - Rules confirmation before each match starts
@@ -18,7 +18,7 @@ Touch-first Garmin Connect IQ watch app for fast tennis scoring on the Venu 2 Pl
 - Haptic patterns for point, game, set, and match events
 - Serve-side ball marker: left on even points, right on odd points, both at golden point
 - Triple haptic and "SWITCH SIDES" notice every six tie-break/super tie-break points
-- Optional match-end stats for points, break points, streaks, service points, duration, and calories
+- Custom comparison stats during play, plus swipeable final stats for points, games, break points, streaks, service points, duration, lead, and calories
 
 ## Project Layout
 
@@ -95,4 +95,4 @@ For sideload testing, connect the Venu 2 Plus over USB and copy the generated `.
 
 ## Notes
 
-This workspace did not have a local Connect IQ SDK installed, so compilation could not be run here. The code avoids Java-style listener porting and uses explicit score-state evaluation.
+The project has been compiled successfully with Connect IQ SDK 9.2.0 for the Venu 2 Plus. The code avoids Java-style listener porting and uses explicit score-state evaluation.
