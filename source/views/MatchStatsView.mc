@@ -6,8 +6,8 @@ class MatchStatsView extends WatchUi.View {
     static const COLOR_MUTED = 0xB8B8B8;
     static const COLOR_LINE = 0x282828;
     static const COLOR_CLOSE = 0x222222;
-    static const ROW_TOP = 112;
-    static const ROW_HEIGHT = 48;
+    static const ROW_TOP = 118;
+    static const ROW_HEIGHT = 46;
     static const ROWS_PER_PAGE = 5;
 
     var _engine;
@@ -39,27 +39,28 @@ class MatchStatsView extends WatchUi.View {
 
     function drawHeader(dc, width, centerX) {
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(
+        drawCenteredText(
+            dc,
             centerX,
-            48,
+            72,
             Graphics.FONT_MEDIUM,
             _finalStats ? "Final stats" : "Current stats",
             Graphics.TEXT_JUSTIFY_CENTER
         );
 
-        var closeX = width - 62;
-        var closeY = 64;
+        var closeX = width - 90;
+        var closeY = 72;
         dc.setColor(COLOR_CLOSE, Graphics.COLOR_TRANSPARENT);
-        dc.fillCircle(closeX, closeY, 22);
+        dc.fillCircle(closeX, closeY, 18);
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
         dc.setPenWidth(3);
-        dc.drawLine(closeX - 6, closeY - 6, closeX + 6, closeY + 6);
-        dc.drawLine(closeX + 6, closeY - 6, closeX - 6, closeY + 6);
+        dc.drawLine(closeX - 5, closeY - 5, closeX + 5, closeY + 5);
+        dc.drawLine(closeX + 5, closeY - 5, closeX - 5, closeY + 5);
         dc.setPenWidth(1);
 
         dc.setColor(0x777777, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(286, 94, Graphics.FONT_XTINY, "Me", Graphics.TEXT_JUSTIFY_CENTER);
-        dc.drawText(350, 94, Graphics.FONT_XTINY, "OP", Graphics.TEXT_JUSTIFY_CENTER);
+        drawCenteredText(dc, 276, 105, Graphics.FONT_XTINY, "Me", Graphics.TEXT_JUSTIFY_CENTER);
+        drawCenteredText(dc, 330, 105, Graphics.FONT_XTINY, "OP", Graphics.TEXT_JUSTIFY_CENTER);
     }
 
     function drawRows(dc, width, state) {
@@ -82,20 +83,20 @@ class MatchStatsView extends WatchUi.View {
         var y = ROW_TOP + (rowIndex * ROW_HEIGHT);
 
         dc.setColor(COLOR_LINE, Graphics.COLOR_TRANSPARENT);
-        dc.drawLine(38, y, width - 38, y);
+        dc.drawLine(62, y, width - 62, y);
 
         dc.setColor(COLOR_MUTED, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(64, y + 13, Graphics.FONT_XTINY, label, Graphics.TEXT_JUSTIFY_LEFT);
+        drawCenteredText(dc, 72, y + (ROW_HEIGHT / 2), Graphics.FONT_XTINY, label, Graphics.TEXT_JUSTIFY_LEFT);
 
         dc.setColor(COLOR_ORANGE, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(286, y + 9, valueFont(playerValue), playerValue, Graphics.TEXT_JUSTIFY_CENTER);
+        drawCenteredText(dc, 276, y + (ROW_HEIGHT / 2), valueFont(playerValue), playerValue, Graphics.TEXT_JUSTIFY_CENTER);
 
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(350, y + 9, valueFont(opponentValue), opponentValue, Graphics.TEXT_JUSTIFY_CENTER);
+        drawCenteredText(dc, 330, y + (ROW_HEIGHT / 2), valueFont(opponentValue), opponentValue, Graphics.TEXT_JUSTIFY_CENTER);
 
         if (rowIndex == ROWS_PER_PAGE - 1 || (_finalStats && _page == 1 && rowIndex == 3)) {
             dc.setColor(COLOR_LINE, Graphics.COLOR_TRANSPARENT);
-            dc.drawLine(38, y + ROW_HEIGHT, width - 38, y + ROW_HEIGHT);
+            dc.drawLine(62, y + ROW_HEIGHT, width - 62, y + ROW_HEIGHT);
         }
     }
 
@@ -122,14 +123,14 @@ class MatchStatsView extends WatchUi.View {
         }
         if (index == 4) {
             return [
-                "Longest point streak",
+                "Best point streak",
                 state.longestPlayerPointStreak.toString(),
                 state.longestOpponentPointStreak.toString()
             ];
         }
         if (index == 5) {
             return [
-                "Longest game streak",
+                "Best game streak",
                 state.longestPlayerGameStreak.toString(),
                 state.longestOpponentGameStreak.toString()
             ];
@@ -171,6 +172,16 @@ class MatchStatsView extends WatchUi.View {
         }
 
         return Graphics.FONT_SMALL;
+    }
+
+    function drawCenteredText(dc, x, centerY, font, text, justification) {
+        dc.drawText(
+            x,
+            centerY - (dc.getFontHeight(font) / 2),
+            font,
+            text,
+            justification
+        );
     }
 
     function drawPageDots(dc, centerX) {
