@@ -1,10 +1,16 @@
 class ScoreFormatter {
     static function summary(state, settings) {
         if (settings.matchFormat == MatchFormat.STB_MATCH) {
+            if (state.matchFinished) {
+                return state.playerPoints + "-" + state.opponentPoints + " | Finished";
+            }
             return "STB Match";
         }
 
         if (settings.matchFormat == MatchFormat.TB_MATCH) {
+            if (state.matchFinished) {
+                return state.playerPoints + "-" + state.opponentPoints + " | Finished";
+            }
             return "TB Match";
         }
 
@@ -111,19 +117,19 @@ class ScoreFormatter {
 
     static function formatLabel(settings) {
         if (settings.matchFormat == MatchFormat.BEST_OF_5) {
-            return "Best Of 5";
+            return "Best of 5";
         } else if (settings.matchFormat == MatchFormat.STB_MATCH) {
             return "STB Match";
         } else if (settings.matchFormat == MatchFormat.TB_MATCH) {
             return "TB Match";
         }
 
-        return "Best Of 3";
+        return "Best of 3";
     }
 
     static function finalSetLabel(settings) {
         if (settings.finalSetMode == FinalSetMode.FULL_SET) {
-            return "Full Set";
+            return "Full set";
         } else if (settings.finalSetMode == FinalSetMode.TB) {
             return "TB";
         }

@@ -9,13 +9,13 @@ class ExitMatchDelegate extends WatchUi.BehaviorDelegate {
     function onTap(clickEvent) {
         var y = clickEvent.getCoordinates()[1];
 
-        if (y >= 176 && y <= 257) {
-            System.exit();
-            return true;
+        if (y >= 186 && y <= 266) {
+            return keepPlaying();
         }
 
-        if (y >= 258 && y <= 342) {
-            return keepPlaying();
+        if (y >= 270 && y <= 350) {
+            System.exit();
+            return true;
         }
 
         return true;

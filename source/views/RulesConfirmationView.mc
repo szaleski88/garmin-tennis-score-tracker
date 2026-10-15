@@ -1,26 +1,51 @@
+using Toybox.Graphics;
 using Toybox.WatchUi;
 
-class RulesConfirmationView extends WatchUi.Menu2 {
+class RulesConfirmationView extends WatchUi.View {
+    var _settings;
+    var _playerServesFirst;
+
     function initialize(settings, playerServesFirst) {
-        var rules = settings.clone();
+        View.initialize();
+        _settings = settings;
+        _playerServesFirst = playerServesFirst;
+    }
 
-        Menu2.initialize({:title=>"Confirm Rules"});
+    function onUpdate(dc) {
+        var centerX = dc.getWidth() / 2;
 
-        addItem(new MenuItem("Start Match", null, "start", {}));
-        addItem(new MenuItem("Server", playerServesFirst ? "Me" : "Opponent", "server", {}));
-        addItem(new MenuItem("Format", ScoreFormatter.formatLabel(rules), "format", {}));
-        addItem(new MenuItem("Scoring", rules.goldenPoint ? "No-Ad" : "Advantage", "scoring", {}));
+        dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_BLACK);
+        dc.clear();
 
-        if (rules.matchFormat == MatchFormat.STB_MATCH) {
-            addItem(new MenuItem("Target", "10 by 2", "target", {}));
-        } else if (rules.matchFormat == MatchFormat.TB_MATCH) {
-            addItem(new MenuItem("Target", "7 by 2", "target", {}));
+        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
+        drawCentered(dc, centerX, 78, Graphics.FONT_SMALL, "Ready to play?");
+
+        dc.setColor(0xE9F400, Graphics.COLOR_TRANSPARENT);
+        drawCentered(dc, centerX, 124, Graphics.FONT_XTINY, _playerServesFirst ? "You serve first" : "Opponent serves first");
+
+        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
+        drawCentered(dc, centerX, 168, Graphics.FONT_XTINY, ScoreFormatter.formatLabel(_settings));
+        drawCentered(dc, centerX, 200, Graphics.FONT_XTINY, _settings.goldenPoint ? "No-ad scoring" : "Advantage scoring");
+
+        if (_settings.matchFormat == MatchFormat.STB_MATCH) {
+            drawCentered(dc, centerX, 232, Graphics.FONT_XTINY, "First to 10, win by 2");
+        } else if (_settings.matchFormat == MatchFormat.TB_MATCH) {
+            drawCentered(dc, centerX, 232, Graphics.FONT_XTINY, "First to 7, win by 2");
         } else {
-            addItem(new MenuItem("Games/Set", rules.gamesInSet.toString(), "games", {}));
-            addItem(new MenuItem("Tie Break At", rules.tieBreakAt.toString(), "tieBreakAt", {}));
-            addItem(new MenuItem("Final Set", ScoreFormatter.finalSetLabel(rules), "final", {}));
+            drawCentered(dc, centerX, 232, Graphics.FONT_XTINY, _settings.gamesInSet + " games per set");
+            drawCentered(dc, centerX, 264, Graphics.FONT_XTINY, "Final: " + ScoreFormatter.finalSetLabel(_settings));
         }
 
-        addItem(new MenuItem("Cancel", null, "cancel", {}));
+        dc.setColor(0xFF7A1A, 0xFF7A1A);
+        dc.fillRoundedRectangle(72, 284, 272, 64, 32);
+        dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_TRANSPARENT);
+        drawCentered(dc, centerX, 316, Graphics.FONT_SMALL, "Start match");
+
+        dc.setColor(0xB8B8B8, Graphics.COLOR_TRANSPARENT);
+        drawCentered(dc, centerX, 380, Graphics.FONT_XTINY, "Change rules");
+    }
+
+    function drawCentered(dc, x, centerY, font, text) {
+        dc.drawText(x, centerY - (dc.getFontHeight(font) / 2), font, text, Graphics.TEXT_JUSTIFY_CENTER);
     }
 }

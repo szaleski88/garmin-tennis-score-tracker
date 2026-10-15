@@ -11,7 +11,7 @@ class MatchStatsDelegate extends WatchUi.BehaviorDelegate {
     function onTap(clickEvent) {
         var coords = clickEvent.getCoordinates();
 
-        if (coords[0] >= 292 && coords[1] <= 112) {
+        if (coords[0] >= 298 && coords[0] <= 370 && coords[1] >= 30 && coords[1] <= 108) {
             return closeStats();
         }
 

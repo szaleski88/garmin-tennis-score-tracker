@@ -14,11 +14,11 @@ class MatchPauseDelegate extends WatchUi.BehaviorDelegate {
         var y = clickEvent.getCoordinates()[1];
 
         if (y >= 124 && y <= 198) {
-            return showStats();
+            return resumeMatch();
         }
 
         if (y >= 199 && y <= 274) {
-            return resumeMatch();
+            return showStats();
         }
 
         if (y >= 275 && y <= 342) {

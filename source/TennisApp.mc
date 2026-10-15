@@ -12,10 +12,6 @@ class TennisApp extends Application.AppBase {
     }
 
     function getInitialView() {
-        if (PersistenceManager.hasSavedMatch()) {
-            return [new ResumeMatchView(), new ResumeMatchDelegate()];
-        }
-
         return [new MainMenuView(), new TennisMenuDelegate()];
     }
 }

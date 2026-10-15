@@ -16,20 +16,24 @@ class ExitMatchView extends WatchUi.View {
         dc.clear();
 
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(centerX, 76, Graphics.FONT_MEDIUM, "Exit this match?", Graphics.TEXT_JUSTIFY_CENTER);
+        drawCentered(dc, centerX, 80, Graphics.FONT_SMALL, "Exit this match?");
 
         dc.setColor(COLOR_MUTED, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(centerX, 122, Graphics.FONT_XTINY, "Your progress is saved.", Graphics.TEXT_JUSTIFY_CENTER);
-        dc.drawText(centerX, 143, Graphics.FONT_XTINY, "Resume from the main menu anytime.", Graphics.TEXT_JUSTIFY_CENTER);
+        drawCentered(dc, centerX, 128, Graphics.FONT_XTINY, "Your progress is saved.");
+        drawCentered(dc, centerX, 160, Graphics.FONT_XTINY, "Resume from the main menu.");
 
-        dc.setColor(COLOR_DANGER, COLOR_DANGER);
-        dc.fillRoundedRectangle(44, 184, 328, 68, 34);
+        dc.setColor(0xFF7A1A, 0xFF7A1A);
+        dc.fillRoundedRectangle(56, 194, 304, 64, 32);
         dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(centerX, 201, Graphics.FONT_SMALL, "Exit match", Graphics.TEXT_JUSTIFY_CENTER);
+        drawCentered(dc, centerX, 226, Graphics.FONT_SMALL, "Keep playing");
 
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_WHITE);
-        dc.fillRoundedRectangle(44, 262, 328, 68, 34);
-        dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(centerX, 279, Graphics.FONT_SMALL, "Keep playing", Graphics.TEXT_JUSTIFY_CENTER);
+        dc.fillRoundedRectangle(72, 278, 272, 64, 32);
+        dc.setColor(COLOR_DANGER, Graphics.COLOR_TRANSPARENT);
+        drawCentered(dc, centerX, 310, Graphics.FONT_SMALL, "Exit & save");
+    }
+
+    function drawCentered(dc, x, centerY, font, text) {
+        dc.drawText(x, centerY - (dc.getFontHeight(font) / 2), font, text, Graphics.TEXT_JUSTIFY_CENTER);
     }
 }

@@ -1,4 +1,3 @@
-using Toybox.Timer;
 using Toybox.WatchUi;
 
 class TennisMatchDelegate extends WatchUi.BehaviorDelegate {
@@ -8,7 +7,6 @@ class TennisMatchDelegate extends WatchUi.BehaviorDelegate {
     var _view;
     var _pauseMenuOpen;
     var _statsConfirmationOpen;
-    var _statsTimer;
 
     function initialize(engine, view) {
         BehaviorDelegate.initialize();
@@ -16,11 +14,13 @@ class TennisMatchDelegate extends WatchUi.BehaviorDelegate {
         _view = view;
         _pauseMenuOpen = false;
         _statsConfirmationOpen = false;
-        _statsTimer = new Timer.Timer();
     }
 
     // --- Screen Taps ---
     function onTap(clickEvent) {
+        if (_view.hasNotice()) {
+            return true;
+        }
         var coords = clickEvent.getCoordinates();
         if (coords[1] < SCREEN_SPLIT_Y) {
             return scoreOpponentPoint();
@@ -43,6 +43,9 @@ class TennisMatchDelegate extends WatchUi.BehaviorDelegate {
     }
 
     function handleSwipe(direction) {
+        if (_view.hasNotice()) {
+            return true;
+        }
         if (direction == WatchUi.SWIPE_RIGHT || direction == WatchUi.SWIPE_DOWN) {
             return showPauseMenu();
         } else if (direction == WatchUi.SWIPE_LEFT) {
@@ -57,17 +60,26 @@ class TennisMatchDelegate extends WatchUi.BehaviorDelegate {
 
     // --- Native Swipe Behaviors (Fallbacks if Garmin ignores raw swipe) ---
     function onPreviousPage() {
+        if (_view.hasNotice()) {
+            return true;
+        }
         // Garmin natively maps Swipe Down to this
         return showPauseMenu();
     }
 
     function onNextPage() {
+        if (_view.hasNotice()) {
+            return true;
+        }
         // Garmin natively maps Swipe Up to this
         return undoPoint();
     }
 
     // --- Hardware Buttons ---
     function onKey(keyEvent) {
+        if (_view.hasNotice()) {
+            return true;
+        }
         var key = keyEvent.getKey();
         // Explicitly catch Top Button
         if (key == WatchUi.KEY_ENTER || key == WatchUi.KEY_START) {
@@ -88,10 +100,16 @@ class TennisMatchDelegate extends WatchUi.BehaviorDelegate {
 
     // --- System Behaviors ---
     function onBack() {
+        if (_view.hasNotice()) {
+            return true;
+        }
         return scorePlayerPoint();
     }
 
     function onMenu() {
+        if (_view.hasNotice()) {
+            return true;
+        }
         return undoPoint();
     }
 
@@ -141,23 +159,11 @@ class TennisMatchDelegate extends WatchUi.BehaviorDelegate {
         _pauseMenuOpen = false;
     }
 
-    function statsConfirmationClosed(showStats) {
+    function finishedResultClosedAfterUndo() {
         _statsConfirmationOpen = false;
-
-        if (showStats) {
-            _statsTimer.stop();
-            _statsTimer.start(method(:showStatsView), 250, false);
-            return;
-        }
-
         if (_engine.undo()) {
             _view.requestRedraw();
         }
-    }
-
-    function showStatsView() {
-        var statsView = new MatchStatsView(_engine);
-        WatchUi.pushView(statsView, new MatchStatsDelegate(statsView), WatchUi.SLIDE_LEFT);
     }
 
     function showPauseMenu() {
@@ -183,28 +189,7 @@ class TennisMatchDelegate extends WatchUi.BehaviorDelegate {
 
         _statsConfirmationOpen = true;
 
-        WatchUi.pushView(
-            new WatchUi.Confirmation("Show Stats?"),
-            new MatchStatsConfirmationDelegate(self),
-            WatchUi.SLIDE_LEFT
-        );
-
-        return true;
-    }
-}
-
-class MatchStatsConfirmationDelegate extends WatchUi.ConfirmationDelegate {
-    var _matchDelegate;
-
-    function initialize(matchDelegate) {
-        ConfirmationDelegate.initialize();
-        _matchDelegate = matchDelegate;
-    }
-
-    function onResponse(response) {
-        if (_matchDelegate != null) {
-            _matchDelegate.statsConfirmationClosed(response == WatchUi.CONFIRM_YES);
-        }
+        WatchUi.pushView(new MatchFinishedView(_engine), new MatchFinishedDelegate(_engine, self), WatchUi.SLIDE_LEFT);
 
         return true;
     }

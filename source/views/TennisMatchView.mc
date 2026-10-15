@@ -6,7 +6,6 @@ using Toybox.WatchUi;
 
 class TennisMatchView extends WatchUi.View {
     static const SPLIT_Y = 208;
-    static const FACE_RADIUS = 208;
     static const TOP_BLACK_Y = 92;
     static const BOTTOM_BLACK_Y = 352;
     static const COLOR_ORANGE = 0xFF7A1A;
@@ -15,12 +14,12 @@ class TennisMatchView extends WatchUi.View {
     static const COLOR_BALL = 0xE9F400;
     static const COLOR_DIM = 0x5C5C5C;
     static const COLOR_WARNING = 0xFFEA00;
-    static const OPPONENT_MARKER_LEFT_X = 90;
-    static const OPPONENT_MARKER_RIGHT_X = 304;
-    static const OPPONENT_MARKER_Y = 168;
+    static const OPPONENT_MARKER_LEFT_X = 100;
+    static const OPPONENT_MARKER_RIGHT_X = 292;
+    static const OPPONENT_MARKER_Y = 172;
     static const PLAYER_MARKER_LEFT_X = 112;
     static const PLAYER_MARKER_RIGHT_X = 260;
-    static const PLAYER_MARKER_Y = 304;
+    static const PLAYER_MARKER_Y = 316;
 
     var _engine;
     var _ball;
@@ -100,6 +99,10 @@ class TennisMatchView extends WatchUi.View {
         WatchUi.requestUpdate();
     }
 
+    function hasNotice() {
+        return _noticeText != null;
+    }
+
     function onUpdate(dc) {
         var width = dc.getWidth();
         var height = dc.getHeight();
@@ -132,27 +135,17 @@ class TennisMatchView extends WatchUi.View {
 
     function drawTopCap(dc, width, centerX, state) {
         dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_TRANSPARENT);
-
-        // Push time up closer to the very top edge
-        dc.drawText(centerX, 10, Graphics.FONT_MEDIUM, currentTimeText(), Graphics.TEXT_JUSTIFY_CENTER);
-
-        // Push calories and battery down to create separation from the time
-        // Note: I'm using the widened X-coordinates (100) here, but adjust to 136 if you kept the original narrow layout.
-        dc.drawText(100, 62, Graphics.FONT_XTINY, caloriesText(state), Graphics.TEXT_JUSTIFY_CENTER);
-
-        if (state.matchFinished) {
-            dc.drawText(centerX, 62, Graphics.FONT_XTINY, stageBadgeText(state), Graphics.TEXT_JUSTIFY_CENTER);
-        }
-
-        dc.drawText(width - 100, 62, Graphics.FONT_XTINY, batteryText(), Graphics.TEXT_JUSTIFY_CENTER);
+        drawCenteredText(dc, centerX, 38, Graphics.FONT_XTINY, currentTimeText());
+        drawCenteredText(dc, 132, 74, Graphics.FONT_XTINY, caloriesText(state));
+        drawCenteredText(dc, width - 132, 74, Graphics.FONT_XTINY, batteryText());
     }
 
     function drawColumnLabels(dc) {
         dc.setColor(COLOR_SET, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(82, 101, Graphics.FONT_XTINY, "SET", Graphics.TEXT_JUSTIFY_CENTER);
+        dc.drawText(72, 100, Graphics.FONT_XTINY, "SET", Graphics.TEXT_JUSTIFY_CENTER);
 
         dc.setColor(COLOR_GAME, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(334, 101, Graphics.FONT_XTINY, "GAME", Graphics.TEXT_JUSTIFY_CENTER);
+        dc.drawText(344, 100, Graphics.FONT_XTINY, "GAME", Graphics.TEXT_JUSTIFY_CENTER);
     }
 
     function drawOpponentScore(dc, centerX, state) {
@@ -161,13 +154,11 @@ class TennisMatchView extends WatchUi.View {
         var sideColor = state.matchFinished && state.matchWinner != 2 ? COLOR_DIM : null;
 
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-        // Shifted left from 126 to 104
-        dc.drawText(104, 118, Graphics.FONT_SMALL, "OP", Graphics.TEXT_JUSTIFY_CENTER);
+        drawCenteredText(dc, 142, 153, Graphics.FONT_XTINY, "OP");
 
-        // Shifted side numbers out to 60 and 356
-        drawSideNumber(dc, 60, 156, state.opponentSets, sideColor == null ? COLOR_SET : sideColor);
-        drawPointScore(dc, centerX, 150, _opponentScore, scoreColor);
-        drawSideNumber(dc, 356, 156, state.opponentGames, sideColor == null ? COLOR_GAME : sideColor);
+        drawSideNumber(dc, 72, 153, state.opponentSets, sideColor == null ? COLOR_SET : sideColor);
+        drawPointScore(dc, centerX, 153, _opponentScore, scoreColor);
+        drawSideNumber(dc, 344, 153, state.opponentGames, sideColor == null ? COLOR_GAME : sideColor);
 
         if (!state.playerServing && !state.matchFinished) {
             drawServingSideMarkers(dc, OPPONENT_MARKER_LEFT_X, OPPONENT_MARKER_RIGHT_X, OPPONENT_MARKER_Y, state);
@@ -176,8 +167,7 @@ class TennisMatchView extends WatchUi.View {
 
     function drawDivider(dc, width, centerX) {
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-        // Changed starting X from 54 to 24, and width reduction from 108 to 48
-        dc.fillRoundedRectangle(24, SPLIT_Y - 3, width - 48, 6, 3);
+        dc.fillRoundedRectangle(48, SPLIT_Y - 3, width - 96, 6, 3);
 
         dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_TRANSPARENT);
         dc.fillCircle(centerX, SPLIT_Y, 4);
@@ -186,15 +176,21 @@ class TennisMatchView extends WatchUi.View {
     function drawPlayerScore(dc, centerX, state) {
         var scoreColor = state.matchFinished && state.matchWinner != 1 ?
             COLOR_DIM : Graphics.COLOR_BLACK;
-        var sideColor = state.matchFinished && state.matchWinner != 1 ? COLOR_DIM : null;
+        var sideColor = state.matchFinished && state.matchWinner != 1 ? COLOR_DIM : Graphics.COLOR_BLACK;
 
-        // Aligned both Y-coordinates to 260
-        drawSideNumber(dc, 82, 260, state.playerSets, sideColor == null ? COLOR_SET : sideColor);
-        drawPointScore(dc, centerX, 280, _playerScore, scoreColor);
-        drawSideNumber(dc, 334, 260, state.playerGames, sideColor == null ? COLOR_GAME : sideColor);
+        drawSideNumber(dc, 72, 270, state.playerSets, sideColor);
+        drawPointScore(dc, centerX, 270, _playerScore, scoreColor);
+        drawSideNumber(dc, 344, 270, state.playerGames, sideColor);
+
+        if (!state.matchFinished) {
+            dc.setColor(COLOR_SET, Graphics.COLOR_TRANSPARENT);
+            dc.fillRoundedRectangle(57, 324, 30, 4, 2);
+            dc.setColor(COLOR_GAME, Graphics.COLOR_TRANSPARENT);
+            dc.fillRoundedRectangle(329, 324, 30, 4, 2);
+        }
 
         dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(292, 304, Graphics.FONT_SMALL, "ME", Graphics.TEXT_JUSTIFY_LEFT);
+        drawCenteredText(dc, 300, 332, Graphics.FONT_XTINY, "ME");
 
         if (state.playerServing && !state.matchFinished) {
             drawServingSideMarkers(dc, PLAYER_MARKER_LEFT_X, PLAYER_MARKER_RIGHT_X, PLAYER_MARKER_Y, state);
@@ -203,12 +199,12 @@ class TennisMatchView extends WatchUi.View {
 
     function drawSideNumber(dc, x, centerY, value, color) {
         dc.setColor(color, Graphics.COLOR_TRANSPARENT);
-        drawCenteredText(dc, x, centerY, Graphics.FONT_NUMBER_MEDIUM, value.toString());
+        drawCenteredText(dc, x, centerY, Graphics.FONT_NUMBER_MILD, value.toString());
     }
 
     function drawPointScore(dc, x, centerY, score, color) {
         dc.setColor(color, Graphics.COLOR_TRANSPARENT);
-        drawCenteredText(dc, x, centerY, scoreFont(score), score);
+        drawCenteredText(dc, x, centerY, scoreFont(dc, score), score);
     }
 
     function drawServingMarker(dc, x, y) {
@@ -245,8 +241,7 @@ class TennisMatchView extends WatchUi.View {
         var color = footerColor(state);
 
         dc.setColor(color, Graphics.COLOR_TRANSPARENT);
-        // Moved duration Y-coordinate UP from height - 48 to height - 64
-        dc.drawText(centerX, height - 64, Graphics.FONT_SMALL, text, Graphics.TEXT_JUSTIFY_CENTER);
+        drawCenteredText(dc, centerX, 373, Graphics.FONT_XTINY, text);
     }
 
     function drawNotice(dc, width, centerX, centerY) {
@@ -266,13 +261,13 @@ class TennisMatchView extends WatchUi.View {
         dc.fillRoundedRectangle(boxX + 4, boxY + 4, boxWidth - 8, boxHeight - 8, 4);
 
         dc.setColor(COLOR_WARNING, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(centerX, boxY + 18, Graphics.FONT_MEDIUM, _noticeText, Graphics.TEXT_JUSTIFY_CENTER);
+        drawCenteredText(dc, centerX, centerY, Graphics.FONT_SMALL, _noticeText);
     }
 
     function drawCenteredText(dc, x, centerY, font, text) {
         dc.drawText(
             x,
-            centerY - (Graphics.getFontHeight(font) / 2),
+            centerY - (dc.getFontHeight(font) / 2),
             font,
             text,
             Graphics.TEXT_JUSTIFY_CENTER
@@ -353,11 +348,18 @@ class TennisMatchView extends WatchUi.View {
         return Graphics.COLOR_WHITE;
     }
 
-    function scoreFont(score) {
+    function scoreFont(dc, score) {
         if (score == "AD" || score == "WIN" || score == "END") {
             return Graphics.FONT_LARGE;
         }
 
-        return Graphics.FONT_NUMBER_HOT;
+        var font = Graphics.FONT_NUMBER_MEDIUM;
+        var dimensions = dc.getTextDimensions(score, font);
+
+        if (dimensions[0] > 150) {
+            return Graphics.FONT_NUMBER_MILD;
+        }
+
+        return font;
     }
 }

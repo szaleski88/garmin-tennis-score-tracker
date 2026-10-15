@@ -2,10 +2,12 @@ using Toybox.WatchUi;
 
 class SettingsDelegate extends WatchUi.Menu2InputDelegate {
     var _settings;
+    var _original;
 
-    function initialize(settings) {
+    function initialize(settings, original) {
         Menu2InputDelegate.initialize();
         _settings = settings;
+        _original = original;
     }
 
     function onSelect(item) {
@@ -34,8 +36,18 @@ class SettingsDelegate extends WatchUi.Menu2InputDelegate {
             PersistenceManager.saveSettings(_settings);
             WatchUi.popView(WatchUi.SLIDE_RIGHT);
         } else if (id.equals("discard")) {
+            restoreOriginal();
             WatchUi.popView(WatchUi.SLIDE_RIGHT);
         }
+    }
+
+    function restoreOriginal() {
+        _settings.matchFormat = _original.matchFormat;
+        _settings.bestOfSets = _original.bestOfSets;
+        _settings.gamesInSet = _original.gamesInSet;
+        _settings.tieBreakAt = _original.tieBreakAt;
+        _settings.goldenPoint = _original.goldenPoint;
+        _settings.finalSetMode = _original.finalSetMode;
     }
 
     function cycleFormat() {
@@ -63,7 +75,7 @@ class SettingsDelegate extends WatchUi.Menu2InputDelegate {
     function redraw() {
         WatchUi.switchToView(
             new SettingsView(_settings),
-            new SettingsDelegate(_settings),
+            new SettingsDelegate(_settings, _original),
             WatchUi.SLIDE_IMMEDIATE
         );
     }

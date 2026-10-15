@@ -1,72 +1,98 @@
-# Play-Test Checklist
+# Venu 2 Plus Play-Test Checklist
 
-## Standard Match
+Use a physical Venu 2 Plus for the final pass. Test outdoors and while walking or lightly jogging; the desktop simulator cannot validate wrist-angle readability, sweat, glove behavior, vibration strength, or accidental presses.
 
-- Start Best Of 3, default STB final set, server Me.
-- Verify Confirm Rules shows server, format, scoring, games, tie-break point, and final set before the match screen opens.
-- Select Start Match.
-- Verify the server ball marker appears on the left at 0-0, right after one point, and left again after two points.
-- Score player through 6-4, 6-4.
-- Verify set count reaches 2-0 and match shows player win.
-- Undo match point; verify score returns to previous game state.
+## Visual and Circular-Screen Pass
 
-## Tie Break Set
+- Inspect every screen at normal wrist distance with display brightness at low, medium, and high.
+- Confirm no title, value, button, close icon, page dot, or notice touches the bezel or clips at the circular edge.
+- Confirm the live point score is readable in a quick glance while moving.
+- Confirm orange always identifies the court/primary action, red identifies set/danger, green identifies game/win, and yellow identifies the ball/attention notice.
+- Confirm muted gray copy remains readable without competing with scores and actions.
+- Confirm no animation leaves stale or partially drawn text after it settles.
 
-- Start Best Of 3.
-- Alternate games to 6-6.
-- Verify stage switches to TB and score is numeric.
-- Verify serve sequence is A, BB, AA, BB.
-- Score the sixth TB point and verify triple vibration plus "SWITCH SIDES" notice.
-- Score TB to 7-5 and verify set becomes 7-6.
+## Main Menu and Recovery
 
-## Golden Point
+- With no saved match, verify the menu contains Start Match and Settings only.
+- With an active saved match, verify Resume Match appears with a compact score summary.
+- Resume and confirm score, server, rules, statistics, and undo history are restored.
+- With a finished saved match, verify View Last Match appears instead of Resume Match.
+- Select Start Match while a match is saved; verify the guarded warning appears.
+- Choose Keep saved and verify no score or settings are changed.
+- Choose Start new and verify the old match is cleared only after that explicit action.
 
-- Enable Golden Point.
-- Score to 40-40.
-- Verify golden point marker appears.
-- Verify both serve-side ball markers appear.
-- Score next point and verify game ends immediately.
+## Setup, Rules, and Settings
 
-## Super Tie Break
+- Select both You and Opponent as first server and verify the rule summary changes correctly.
+- Verify Best of 3 and Best of 5 summaries show scoring, games per set, and final-set mode.
+- Verify TB Match shows “First to 7, win by 2.”
+- Verify STB Match shows “First to 10, win by 2.”
+- Open Change rules, edit each setting, save, and verify the rule-confirmation screen updates.
+- Open Change rules, edit each setting, cancel, and verify all original values are restored.
+- Confirm TB/STB settings hide irrelevant game, tie-break-at, and final-set rows.
+- Confirm Back from rule confirmation returns to server selection without starting or saving a match.
 
-- Start STB Match.
-- Score the sixth STB point and verify triple vibration plus "SWITCH SIDES" notice.
-- Score to 10-8.
-- Verify match ends only at 10 with two-point lead.
-- Decline the stats confirmation and verify the score returns to the point before match point.
-- Re-score match point, confirm stats, and verify the styled final comparison stats open.
-- Swipe up and verify the second final-stats page shows game streak, lead, duration, and calories.
-- Swipe down and verify the first final-stats page returns.
+## Live Scoring and Touch Targets
 
-## Undo
-
-- Undo one normal point.
-- Undo a game-winning point.
-- Undo a set-winning point.
-- Undo a match-winning point.
-- Score six points, undo five times, and verify a sixth undo does not change the score.
-- Swipe left and up and verify both gestures undo one stored point.
-- Click the middle hardware button repeatedly and verify each click undoes one stored point.
-- Verify server, stage, score, and match status restore each time.
+- Verify set, point, and game values do not collide for 0, 15, 30, 40, AD, and two-digit tie-break scores.
+- Verify the serving ball never obscures a value or the Me/OP label.
+- Tap the top half ten times while moving; verify exactly ten opponent points are recorded.
+- Tap the bottom half ten times while moving; verify exactly ten player points are recorded.
+- Verify taps close to the center divider still score the intended half.
+- Swipe left and up; verify each gesture undoes exactly one stored point.
+- Swipe right and down; verify each gesture opens pause without changing the score.
+- Verify the duration, time, calories, and battery values remain inside the safe area.
 
 ## Hardware Controls
 
-- Tap the top half of the screen and verify it scores the opponent.
-- Tap the bottom half of the screen and verify it scores the player.
-- Click the top hardware button and verify it scores the opponent.
-- Click the bottom hardware button and verify it scores the player without closing the app.
-- Click the middle hardware button and verify it undoes the last point.
+- Press the top hardware button; verify it scores the opponent.
+- Press the bottom hardware button; verify it scores the player without closing the app.
+- Press the middle hardware button; verify it undoes one point.
+- Repeat each control with the display wet and while the wrist is moving.
+- Verify hardware input is ignored while the SWITCH SIDES notice is visible.
 
-## Recovery
+## Side Switch and Notices
 
-- Score at least one point.
-- Swipe down and verify the match pause hub opens without changing the score.
-- Open current stats and verify points, service points, break points, point streak, and game streak compare Me with OP.
-- Close current stats and verify the pause hub returns instead of the scoring screen.
-- Resume and verify scoring continues from the unchanged score.
-- Reopen the pause hub, choose Exit match, then choose Keep playing and verify the pause hub returns.
-- Choose Exit match again and confirm exit.
-- Repeat with a resumed match using swipe right to open the pause hub.
-- Reopen app.
-- Verify Resume Match appears.
-- Resume and confirm score/settings/history restored.
+- In TB and STB formats, score the sixth point and verify triple vibration plus SWITCH SIDES.
+- While the notice is visible, tap both halves, swipe, and press every hardware button; verify the score and navigation do not change.
+- Verify scoring resumes normally after the notice clears.
+- Confirm the notice text and outline remain clear over both score halves.
+
+## Pause, Current Stats, and Exit
+
+- Open pause and verify Resume match is the dominant orange action.
+- Verify View stats and Exit & save are visually distinct and do not overlap.
+- Open current stats before the first point; verify the empty-state message appears.
+- After scoring, verify points, service points, break points, point streak, and game streak compare Me with OP.
+- Swipe through every current-stat page and verify page dots track the current page.
+- Close stats with the close target, Back, and right swipe; each should return to pause.
+- Open Exit & save; verify Keep playing is the primary action and Back returns safely.
+- Confirm Exit & save; relaunch the app and verify recovery data is intact.
+
+## Scoring Rules
+
+- Standard advantage: exercise deuce, advantage each side, return to deuce, and game by two.
+- No-ad: reach 40-40, verify two serving-side balls, and confirm the next point wins the game.
+- Standard set: finish 6-0 and 6-4; verify set and game resets.
+- Tie-break set: reach 6-6, verify numeric scoring and A-BB-AA serving order, then finish 7-5.
+- Full final set: verify it continues until a two-game lead.
+- STB final set: verify it starts only in the deciding set and ends at 10 by two.
+- Standalone TB and STB matches: verify the winner and final point score are reported correctly.
+
+## Undo and Persistence
+
+- Undo a normal point, game-winning point, set-winning point, and match-winning point.
+- Verify server, stage, totals, streaks, break points, duration state, and match status restore each time.
+- Score six points, undo five times, and verify a sixth undo does not change the score.
+- Exit and resume after an undo; verify the restored state and available undo history persist.
+
+## Finished Match and Final Stats
+
+- Finish once as the player and once as the opponent; verify YOU WON/YOU LOST uses the correct green/red semantic color.
+- Verify a normal match reports the final set score and TB/STB matches report the final point score.
+- Select Undo match point and verify live scoring returns to the exact pre-match-point state.
+- Finish again, open View stats, and inspect all three final-stat pages.
+- Verify page 1 contains points, games, service points, and break points.
+- Verify page 2 contains best point streak, best game streak, and max point lead.
+- Verify page 3 contains duration and calories.
+- Exit to menu and verify View Last Match opens the finished summary and final stats again.
