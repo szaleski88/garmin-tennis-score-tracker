@@ -11,6 +11,7 @@ Touch-first Garmin Connect IQ watch app for fast tennis scoring on the Venu 2 Pl
 - Swipe right or down opens a match pause hub with current stats, resume, and exit actions
 - Best-of-3, best-of-5, tie-break-only, super-tie-break-only formats
 - Normal, no-ad, tie-break, super tie-break, short-set rules via settings
+- Optional final-set prompt to choose a regular set or super tie-break when the deciding set begins
 - Rules confirmation before each match starts
 - Server indicator with PNG tennis ball asset
 - Undo history snapshots capped at 5

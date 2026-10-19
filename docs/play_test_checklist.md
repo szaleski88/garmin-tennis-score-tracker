@@ -29,6 +29,8 @@ Use a physical Venu 2 Plus for the final pass. Test outdoors and while walking o
 - Verify STB Match shows “First to 10, win by 2.”
 - Open Change rules, edit each setting, save, and verify the rule-confirmation screen updates.
 - Open Change rules, edit each setting, cancel, and verify all original values are restored.
+- Repeatedly select Final set and verify STB, TB, Full set, and DECIDE cycle without scrolling the menu back to the top.
+- Confirm DECIDE is offered for Best of 3 but skipped for Best of 5.
 - Confirm TB/STB settings hide irrelevant game, tie-break-at, and final-set rows.
 - Confirm Back from rule confirmation returns to server selection without starting or saving a match.
 
@@ -77,6 +79,7 @@ Use a physical Venu 2 Plus for the final pass. Test outdoors and while walking o
 - Tie-break set: reach 6-6, verify numeric scoring and A-BB-AA serving order, then finish 7-5.
 - Full final set: verify it continues until a two-game lead.
 - STB final set: verify it starts only in the deciding set and ends at 10 by two.
+- DECIDE final set: reach one set each, choose STB from the top half and Regular set from the bottom half, and verify the selection survives exit/resume and undo/redo.
 - Standalone TB and STB matches: verify the winner and final point score are reported correctly.
 
 ## Undo and Persistence

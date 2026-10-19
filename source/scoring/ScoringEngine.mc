@@ -42,6 +42,12 @@ class ScoringEngine {
         _history = [];
         _redoHistory = [];
 
+        if (needsFinalSetDecision() &&
+            _state.playerGames == 0 && _state.opponentGames == 0 &&
+            _state.playerPoints == 0 && _state.opponentPoints == 0) {
+            _state.stage = StageType.FINAL_SET_DECISION;
+        }
+
         if (history != null) {
             for (var i = 0; i < history.size(); i++) {
                 _history.add(history[i].clone());
@@ -65,6 +71,10 @@ class ScoringEngine {
         return _state;
     }
 
+    function isAwaitingFinalSetDecision() {
+        return _state.stage == StageType.FINAL_SET_DECISION;
+    }
+
     function historyToStorage() {
         return stateStackToStorage(_history);
     }
@@ -84,6 +94,10 @@ class ScoringEngine {
     function score(playerWonPoint) {
         if (_state.matchFinished) {
             return MatchResult.NONE;
+        }
+
+        if (isAwaitingFinalSetDecision()) {
+            return selectFinalSetMode(playerWonPoint ? FinalSetMode.TB : FinalSetMode.STB);
         }
 
         pushSnapshot();
@@ -110,6 +124,23 @@ class ScoringEngine {
         PersistenceManager.saveMatch(self);
         vibrateFor(result);
         return result;
+    }
+
+    function selectFinalSetMode(mode) {
+        pushSnapshot();
+        clearRedoHistory();
+        _state.selectedFinalSetMode = mode;
+
+        if (mode == FinalSetMode.STB) {
+            _state.stage = StageType.SUPER_TIE_BREAK;
+            _state.tieBreakStarterPlayerServing = _state.playerServing;
+        } else {
+            startNextGame();
+        }
+
+        PersistenceManager.saveMatch(self);
+        vibrateFor(MatchResult.POINT);
+        return MatchResult.POINT;
     }
 
     function undo() {
@@ -404,7 +435,7 @@ class ScoringEngine {
     }
 
     function setFinished() {
-        if (isFinalSet() && _settings.finalSetMode == FinalSetMode.FULL_SET) {
+        if (isFinalSet() && effectiveFinalSetMode() == FinalSetMode.FULL_SET) {
             return setFinishedByTwo(_state.playerGames, _state.opponentGames) ||
                 setFinishedByTwo(_state.opponentGames, _state.playerGames);
         }
@@ -439,7 +470,12 @@ class ScoringEngine {
     }
 
     function startNextSet() {
-        if (isFinalSet() && _settings.finalSetMode == FinalSetMode.STB) {
+        if (needsFinalSetDecision()) {
+            _state.stage = StageType.FINAL_SET_DECISION;
+            return;
+        }
+
+        if (isFinalSet() && effectiveFinalSetMode() == FinalSetMode.STB) {
             _state.stage = StageType.SUPER_TIE_BREAK;
             _state.tieBreakStarterPlayerServing = _state.playerServing;
             return;
@@ -460,7 +496,7 @@ class ScoringEngine {
     }
 
     function shouldStartTieBreak() {
-        if (isFinalSet() && _settings.finalSetMode == FinalSetMode.FULL_SET) {
+        if (isFinalSet() && effectiveFinalSetMode() == FinalSetMode.FULL_SET) {
             return false;
         }
 
@@ -470,6 +506,24 @@ class ScoringEngine {
 
     function isFinalSet() {
         return (_state.playerSets + _state.opponentSets) == (_settings.bestOfSets - 1);
+    }
+
+    function needsFinalSetDecision() {
+        return _settings.matchFormat == MatchFormat.BEST_OF_3 &&
+            _settings.finalSetMode == FinalSetMode.DECIDE &&
+            isFinalSet() && _state.selectedFinalSetMode == null;
+    }
+
+    function effectiveFinalSetMode() {
+        if (_settings.finalSetMode == FinalSetMode.DECIDE) {
+            if (_state.selectedFinalSetMode != null) {
+                return _state.selectedFinalSetMode;
+            }
+
+            return FinalSetMode.TB;
+        }
+
+        return _settings.finalSetMode;
     }
 
     function tieBreakServerForNextPoint() {

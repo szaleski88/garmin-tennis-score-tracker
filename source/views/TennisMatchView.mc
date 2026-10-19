@@ -110,6 +110,11 @@ class TennisMatchView extends WatchUi.View {
         var centerY = height / 2;
         var state = _engine.getState();
 
+        if (_engine.isAwaitingFinalSetDecision()) {
+            drawFinalSetDecision(dc, width, height, centerX, centerY);
+            return;
+        }
+
         drawFace(dc, width, height, centerX, centerY);
         drawTopCap(dc, width, centerX, state);
         drawColumnLabels(dc);
@@ -118,6 +123,26 @@ class TennisMatchView extends WatchUi.View {
         drawPlayerScore(dc, centerX, state);
         drawFooter(dc, height, centerX, state);
         drawNotice(dc, width, centerX, centerY);
+    }
+
+    function drawFinalSetDecision(dc, width, height, centerX, centerY) {
+        dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_BLACK);
+        dc.clear();
+
+        dc.setColor(COLOR_ORANGE, Graphics.COLOR_TRANSPARENT);
+        dc.fillCircle(centerX, centerY, centerX);
+
+        dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_TRANSPARENT);
+        dc.fillRectangle(0, 0, width, SPLIT_Y);
+
+        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
+        dc.fillRoundedRectangle(24, SPLIT_Y - 3, width - 48, 6, 3);
+        dc.drawText(centerX, 44, Graphics.FONT_SMALL, "FINAL SET", Graphics.TEXT_JUSTIFY_CENTER);
+        drawCenteredText(dc, centerX, 142, Graphics.FONT_LARGE, "STB");
+
+        dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_TRANSPARENT);
+        drawCenteredText(dc, centerX, 274, Graphics.FONT_MEDIUM, "REGULAR SET");
+        dc.drawText(centerX, height - 70, Graphics.FONT_XTINY, "TAP OR BUTTON", Graphics.TEXT_JUSTIFY_CENTER);
     }
 
     function drawFace(dc, width, height, centerX, centerY) {

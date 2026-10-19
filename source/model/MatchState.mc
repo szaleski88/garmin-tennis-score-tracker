@@ -36,6 +36,7 @@ class MatchState {
     var longestOpponentGameStreak;
     var maxPlayerPointLead;
     var maxOpponentPointLead;
+    var selectedFinalSetMode;
 
     function initialize() {
         playerSets = 0;
@@ -75,6 +76,7 @@ class MatchState {
         longestOpponentGameStreak = 0;
         maxPlayerPointLead = 0;
         maxOpponentPointLead = 0;
+        selectedFinalSetMode = null;
     }
 
     function clone() {
@@ -116,6 +118,7 @@ class MatchState {
         copy.longestOpponentGameStreak = longestOpponentGameStreak;
         copy.maxPlayerPointLead = maxPlayerPointLead;
         copy.maxOpponentPointLead = maxOpponentPointLead;
+        copy.selectedFinalSetMode = selectedFinalSetMode;
         return copy;
     }
 
@@ -157,7 +160,8 @@ class MatchState {
             "longestPlayerGameStreak" => longestPlayerGameStreak,
             "longestOpponentGameStreak" => longestOpponentGameStreak,
             "maxPlayerPointLead" => maxPlayerPointLead,
-            "maxOpponentPointLead" => maxOpponentPointLead
+            "maxOpponentPointLead" => maxOpponentPointLead,
+            "selectedFinalSetMode" => selectedFinalSetMode
         };
     }
 
@@ -199,7 +203,8 @@ class MatchState {
             longestPlayerGameStreak,
             longestOpponentGameStreak,
             maxPlayerPointLead,
-            maxOpponentPointLead
+            maxOpponentPointLead,
+            selectedFinalSetMode
         ];
     }
 
@@ -321,6 +326,9 @@ class MatchState {
         if (data.hasKey("maxOpponentPointLead")) {
             state.maxOpponentPointLead = data["maxOpponentPointLead"];
         }
+        if (data.hasKey("selectedFinalSetMode")) {
+            state.selectedFinalSetMode = data["selectedFinalSetMode"];
+        }
 
         return state;
     }
@@ -421,6 +429,9 @@ class MatchState {
         }
         if (data.size() > 36) {
             state.maxOpponentPointLead = data[36];
+        }
+        if (data.size() > 37) {
+            state.selectedFinalSetMode = data[37];
         }
 
         return state;
