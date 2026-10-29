@@ -110,6 +110,16 @@ class TennisMatchView extends WatchUi.View {
         var centerY = height / 2;
         var state = _engine.getState();
 
+        if (_engine.isAwaitingServerSelection()) {
+            drawServerSelection(dc, width, height, centerX, centerY, state);
+            return;
+        }
+
+        if (_engine.isAwaitingAttribution()) {
+            drawAttribution(dc, width, height, centerX, centerY);
+            return;
+        }
+
         if (_engine.isAwaitingFinalSetDecision()) {
             drawFinalSetDecision(dc, width, height, centerX, centerY);
             return;
@@ -123,6 +133,58 @@ class TennisMatchView extends WatchUi.View {
         drawPlayerScore(dc, centerX, state);
         drawFooter(dc, height, centerX, state);
         drawNotice(dc, width, centerX, centerY);
+    }
+
+    function drawAttribution(dc, width, height, centerX, centerY) {
+        dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_BLACK);
+        dc.clear();
+
+        dc.setColor(COLOR_ORANGE, Graphics.COLOR_TRANSPARENT);
+        dc.fillCircle(centerX, centerY, centerX);
+        dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_TRANSPARENT);
+        dc.fillRectangle(0, 0, width, SPLIT_Y);
+
+        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
+        dc.setPenWidth(1);
+        dc.drawLine(centerX, 0, centerX, height);
+        dc.drawLine(0, centerY, width, centerY);
+
+        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
+        drawCenteredText(dc, width / 4, 116, Graphics.FONT_MEDIUM, "OP 1");
+        drawCenteredText(dc, (width * 3) / 4, 116, Graphics.FONT_MEDIUM, "OP 2");
+
+        dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_TRANSPARENT);
+        drawCenteredText(dc, width / 4, 300, Graphics.FONT_MEDIUM, "ME");
+        drawCenteredText(dc, (width * 3) / 4, 300, Graphics.FONT_MEDIUM, "P");
+
+        if (_engine.doubleFaultAvailable()) {
+            dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
+            dc.fillCircle(centerX, centerY, 48);
+            dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_TRANSPARENT);
+            drawCenteredText(dc, centerX, centerY, Graphics.FONT_MEDIUM, "DF");
+        }
+    }
+
+    function drawServerSelection(dc, width, height, centerX, centerY, state) {
+        dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_BLACK);
+        dc.clear();
+
+        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
+        drawCenteredText(dc, centerX, 74, Graphics.FONT_SMALL, "WHO SERVES FIRST?");
+
+        dc.setColor(COLOR_ORANGE, Graphics.COLOR_TRANSPARENT);
+        dc.fillCircle(centerX, centerY + 32, centerX);
+        dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_TRANSPARENT);
+        dc.fillRectangle(0, 0, width, centerY + 32);
+
+        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
+        var left = state.playerServing ? "ME" : "OP 1";
+        var right = state.playerServing ? "P" : "OP 2";
+        drawCenteredText(dc, width / 4, 190, Graphics.FONT_MEDIUM, left);
+        drawCenteredText(dc, (width * 3) / 4, 190, Graphics.FONT_MEDIUM, right);
+
+        dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_TRANSPARENT);
+        drawCenteredText(dc, centerX, 304, Graphics.FONT_XTINY, "SELECT SERVER FOR THIS SET");
     }
 
     function drawFinalSetDecision(dc, width, height, centerX, centerY) {
@@ -238,6 +300,11 @@ class TennisMatchView extends WatchUi.View {
 
         if (_ball != null) {
             dc.drawBitmap(x, y, _ball);
+        }
+
+        if (_engine.getSettings().trackPlays) {
+            dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_TRANSPARENT);
+            drawCenteredText(dc, x + 11, y + 11, Graphics.FONT_XTINY, PlayerId.marker(_engine.getState().currentServer));
         }
     }
 

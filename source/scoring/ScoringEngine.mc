@@ -8,7 +8,7 @@ class ScoringEngine {
     var _history;
     var _redoHistory;
 
-    function initialize(settings, playerServesFirst) {
+    function initialize(settings, playerServesFirst, initialServer) {
         _settings = settings.clone();
         _state = new MatchState();
         _history = [];
@@ -16,6 +16,7 @@ class ScoringEngine {
 
         _state.playerServing = playerServesFirst;
         _state.tieBreakStarterPlayerServing = playerServesFirst;
+        configureServerRotation(initialServer);
         _state.startedAt = MatchMetrics.nowSeconds();
         _state.calorieBaseline = MatchMetrics.currentCalories();
 
@@ -28,10 +29,14 @@ class ScoringEngine {
         } else {
             _state.stage = StageType.GAME;
         }
+
+        if (isTieBreakStage()) {
+            _state.tieBreakStarterServer = _state.currentServer;
+        }
     }
 
     static function resume(snapshot) {
-        var engine = new ScoringEngine(snapshot.settings, snapshot.state.playerServing);
+        var engine = new ScoringEngine(snapshot.settings, snapshot.state.playerServing, snapshot.state.currentServer);
         engine.restore(snapshot.state, snapshot.history, snapshot.redoHistory);
         return engine;
     }
@@ -75,6 +80,23 @@ class ScoringEngine {
         return _state.stage == StageType.FINAL_SET_DECISION;
     }
 
+    function isAwaitingAttribution() {
+        return _settings.trackPlays && _state.pendingPointWinner != 0;
+    }
+
+    function isAwaitingServerSelection() {
+        return _settings.trackPlays && _state.awaitingServerSelection;
+    }
+
+    function doubleFaultAvailable() {
+        if (!isAwaitingAttribution()) {
+            return false;
+        }
+
+        var playerWonPoint = _state.pendingPointWinner == 1;
+        return playerWonPoint != PlayerId.isOurTeam(_state.currentServer);
+    }
+
     function historyToStorage() {
         return stateStackToStorage(_history);
     }
@@ -100,8 +122,60 @@ class ScoringEngine {
             return selectFinalSetMode(playerWonPoint ? FinalSetMode.TB : FinalSetMode.STB);
         }
 
+        if (isAwaitingServerSelection()) {
+            return MatchResult.NONE;
+        }
+
+        if (_settings.trackPlays) {
+            return beginPoint(playerWonPoint);
+        }
+
+        return applyPoint(playerWonPoint, true);
+    }
+
+    function beginPoint(playerWonPoint) {
+        if (isAwaitingAttribution()) {
+            return MatchResult.NONE;
+        }
+
         pushSnapshot();
         clearRedoHistory();
+        _state.pendingPointWinner = playerWonPoint ? 1 : 2;
+        PersistenceManager.saveMatch(self);
+        return MatchResult.NONE;
+    }
+
+    function attributePoint(player) {
+        if (!isAwaitingAttribution()) {
+            return MatchResult.NONE;
+        }
+
+        var playerWonPoint = _state.pendingPointWinner == 1;
+
+        if (player == PlayerId.DOUBLE_FAULT) {
+            if (!doubleFaultAvailable()) {
+                return MatchResult.NONE;
+            }
+            _state.doubleFaults[_state.currentServer]++;
+        } else if (player >= PlayerId.ME && player <= PlayerId.OP_2) {
+            if (PlayerId.isOurTeam(player) == playerWonPoint) {
+                _state.pointsScored[player]++;
+            } else {
+                _state.errors[player]++;
+            }
+        } else {
+            return MatchResult.NONE;
+        }
+
+        _state.pendingPointWinner = 0;
+        return applyPoint(playerWonPoint, false);
+    }
+
+    function applyPoint(playerWonPoint, saveSnapshot) {
+        if (saveSnapshot) {
+            pushSnapshot();
+            clearRedoHistory();
+        }
 
         var breakPointForPlayer = isBreakPointFor(true);
         var breakPointForOpponent = isBreakPointFor(false);
@@ -134,8 +208,13 @@ class ScoringEngine {
         if (mode == FinalSetMode.STB) {
             _state.stage = StageType.SUPER_TIE_BREAK;
             _state.tieBreakStarterPlayerServing = _state.playerServing;
+            _state.tieBreakStarterServer = _state.currentServer;
         } else {
             startNextGame();
+        }
+
+        if (_settings.trackPlays) {
+            _state.awaitingServerSelection = true;
         }
 
         PersistenceManager.saveMatch(self);
@@ -169,6 +248,38 @@ class ScoringEngine {
         ensureMetrics();
         PersistenceManager.saveMatch(self);
         return true;
+    }
+
+    function selectSetStartingServer(player) {
+        if (!isAwaitingServerSelection() || PlayerId.isOurTeam(player) != _state.playerServing) {
+            return false;
+        }
+
+        configureServerRotation(player);
+        _state.awaitingServerSelection = false;
+
+        if (isTieBreakStage()) {
+            _state.tieBreakStarterPlayerServing = _state.playerServing;
+            _state.tieBreakStarterServer = _state.currentServer;
+        }
+
+        PersistenceManager.saveMatch(self);
+        return true;
+    }
+
+    function configureServerRotation(firstServer) {
+        if (firstServer == PlayerId.PARTNER) {
+            _state.serverRotation = [PlayerId.PARTNER, PlayerId.OP_1, PlayerId.ME, PlayerId.OP_2];
+        } else if (firstServer == PlayerId.OP_1) {
+            _state.serverRotation = [PlayerId.OP_1, PlayerId.ME, PlayerId.OP_2, PlayerId.PARTNER];
+        } else if (firstServer == PlayerId.OP_2) {
+            _state.serverRotation = [PlayerId.OP_2, PlayerId.ME, PlayerId.OP_1, PlayerId.PARTNER];
+        } else {
+            _state.serverRotation = [PlayerId.ME, PlayerId.OP_1, PlayerId.PARTNER, PlayerId.OP_2];
+        }
+
+        _state.currentServer = firstServer;
+        _state.tieBreakStarterServer = firstServer;
     }
 
     function ensureMetrics() {
@@ -339,6 +450,7 @@ class ScoringEngine {
         if (!stageHasWinner(playerWonPoint)) {
             if (isTieBreakStage()) {
                 _state.playerServing = tieBreakServerForNextPoint();
+                updateTieBreakIndividualServer();
 
                 if (sideSwapDue()) {
                     return MatchResult.SIDE_SWAP;
@@ -416,8 +528,10 @@ class ScoringEngine {
 
         if (_state.stage == StageType.TIE_BREAK) {
             _state.playerServing = !_state.tieBreakStarterPlayerServing;
+            _state.currentServer = serverAfter(_state.tieBreakStarterServer);
         } else {
             _state.playerServing = !_state.playerServing;
+            _state.currentServer = serverAfter(_state.currentServer);
         }
     }
 
@@ -478,16 +592,24 @@ class ScoringEngine {
         if (isFinalSet() && effectiveFinalSetMode() == FinalSetMode.STB) {
             _state.stage = StageType.SUPER_TIE_BREAK;
             _state.tieBreakStarterPlayerServing = _state.playerServing;
+            _state.tieBreakStarterServer = _state.currentServer;
+            if (_settings.trackPlays) {
+                _state.awaitingServerSelection = true;
+            }
             return;
         }
 
         startNextGame();
+        if (_settings.trackPlays) {
+            _state.awaitingServerSelection = true;
+        }
     }
 
     function startNextGame() {
         if (shouldStartTieBreak()) {
             _state.stage = StageType.TIE_BREAK;
             _state.tieBreakStarterPlayerServing = _state.playerServing;
+            _state.tieBreakStarterServer = _state.currentServer;
         } else if (_settings.goldenPoint) {
             _state.stage = StageType.GOLDEN_GAME;
         } else {
@@ -535,6 +657,27 @@ class ScoringEngine {
         }
 
         return !_state.tieBreakStarterPlayerServing;
+    }
+
+    function updateTieBreakIndividualServer() {
+        var played = _state.playerPoints + _state.opponentPoints;
+        var offset = (played + 1) / 2;
+        var starterIndex = serverIndex(_state.tieBreakStarterServer);
+        _state.currentServer = _state.serverRotation[(starterIndex + offset) % 4];
+    }
+
+    function serverAfter(server) {
+        return _state.serverRotation[(serverIndex(server) + 1) % 4];
+    }
+
+    function serverIndex(server) {
+        for (var i = 0; i < _state.serverRotation.size(); i++) {
+            if (_state.serverRotation[i] == server) {
+                return i;
+            }
+        }
+
+        return 0;
     }
 
     function isTieBreakStage() {

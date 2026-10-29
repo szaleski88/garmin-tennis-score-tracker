@@ -19,6 +19,7 @@ class MatchSettings {
     var tieBreakAt;
     var goldenPoint;
     var finalSetMode;
+    var trackPlays;
 
     function initialize() {
         matchFormat = MatchFormat.BEST_OF_3;
@@ -27,6 +28,7 @@ class MatchSettings {
         tieBreakAt = 6;
         goldenPoint = false;
         finalSetMode = FinalSetMode.STB;
+        trackPlays = false;
     }
 
     function clone() {
@@ -37,6 +39,7 @@ class MatchSettings {
         copy.tieBreakAt = tieBreakAt;
         copy.goldenPoint = goldenPoint;
         copy.finalSetMode = finalSetMode;
+        copy.trackPlays = trackPlays;
         return copy;
     }
 
@@ -63,7 +66,8 @@ class MatchSettings {
             "gamesInSet" => gamesInSet,
             "tieBreakAt" => tieBreakAt,
             "goldenPoint" => goldenPoint,
-            "finalSetMode" => finalSetMode
+            "finalSetMode" => finalSetMode,
+            "trackPlays" => trackPlays
         };
     }
 
@@ -91,6 +95,9 @@ class MatchSettings {
         }
         if (data.hasKey("finalSetMode")) {
             settings.finalSetMode = data["finalSetMode"];
+        }
+        if (data.hasKey("trackPlays")) {
+            settings.trackPlays = data["trackPlays"];
         }
 
         return settings;

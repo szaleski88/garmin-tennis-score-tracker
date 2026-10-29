@@ -19,6 +19,8 @@ class SettingsView extends WatchUi.Menu2 {
             addItem(new MenuItem("Final set", ScoreFormatter.finalSetLabel(settings), "final", {}));
         }
 
+        addItem(new MenuItem("Track Plays", settings.trackPlays ? "YES" : "NO", "trackPlays", {}));
+
         addItem(new MenuItem("Save changes", null, "save", {}));
         addItem(new MenuItem("Cancel", null, "discard", {}));
     }

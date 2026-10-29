@@ -3,11 +3,13 @@ using Toybox.WatchUi;
 class RulesConfirmationDelegate extends WatchUi.BehaviorDelegate {
     var _settings;
     var _playerServesFirst;
+    var _initialServer;
 
-    function initialize(settings, playerServesFirst) {
+    function initialize(settings, playerServesFirst, initialServer) {
         BehaviorDelegate.initialize();
         _settings = settings;
         _playerServesFirst = playerServesFirst;
+        _initialServer = initialServer;
     }
 
     function onTap(clickEvent) {
@@ -41,11 +43,14 @@ class RulesConfirmationDelegate extends WatchUi.BehaviorDelegate {
     }
 
     function startMatch() {
-        var engine = new ScoringEngine(_settings, _playerServesFirst);
+        var engine = new ScoringEngine(_settings, _playerServesFirst, _initialServer);
         var view = new TennisMatchView(engine);
 
         PersistenceManager.saveMatch(engine);
         WatchUi.pushView(view, new TennisMatchDelegate(engine, view), WatchUi.SLIDE_LEFT);
+        if (_settings.trackPlays) {
+            view.showNotice(PlayerId.serveNotice(_initialServer));
+        }
         return true;
     }
 }

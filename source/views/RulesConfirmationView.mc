@@ -4,11 +4,13 @@ using Toybox.WatchUi;
 class RulesConfirmationView extends WatchUi.View {
     var _settings;
     var _playerServesFirst;
+    var _initialServer;
 
-    function initialize(settings, playerServesFirst) {
+    function initialize(settings, playerServesFirst, initialServer) {
         View.initialize();
         _settings = settings;
         _playerServesFirst = playerServesFirst;
+        _initialServer = initialServer;
     }
 
     function onUpdate(dc) {
@@ -23,8 +25,12 @@ class RulesConfirmationView extends WatchUi.View {
         dc.setColor(0xE9F400, Graphics.COLOR_TRANSPARENT);
         drawCentered(dc, centerX, 124, Graphics.FONT_XTINY, _playerServesFirst ? "You serve first" : "Opponent serves first");
 
+        if (_settings.trackPlays) {
+            drawCentered(dc, centerX, 146, Graphics.FONT_XTINY, PlayerId.label(_initialServer) + " starts serving");
+        }
+
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-        drawCentered(dc, centerX, 168, Graphics.FONT_XTINY, ScoreFormatter.formatLabel(_settings));
+        drawCentered(dc, centerX, _settings.trackPlays ? 174 : 168, Graphics.FONT_XTINY, ScoreFormatter.formatLabel(_settings));
         drawCentered(dc, centerX, 200, Graphics.FONT_XTINY, _settings.goldenPoint ? "No-ad scoring" : "Advantage scoring");
 
         if (_settings.matchFormat == MatchFormat.STB_MATCH) {

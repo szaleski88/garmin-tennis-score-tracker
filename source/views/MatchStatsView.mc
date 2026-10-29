@@ -29,7 +29,7 @@ class MatchStatsView extends WatchUi.View {
         dc.clear();
         drawHeader(dc, width);
 
-        if (state.playerTotalPoints == 0 && state.opponentTotalPoints == 0) {
+        if (!_engine.getSettings().trackPlays && state.playerTotalPoints == 0 && state.opponentTotalPoints == 0) {
             drawEmptyState(dc, centerX);
             return;
         }
@@ -55,8 +55,14 @@ class MatchStatsView extends WatchUi.View {
         dc.setPenWidth(1);
 
         dc.setColor(0x777777, Graphics.COLOR_TRANSPARENT);
-        drawText(dc, 270, 102, Graphics.FONT_XTINY, "Me", Graphics.TEXT_JUSTIFY_CENTER);
-        drawText(dc, 342, 102, Graphics.FONT_XTINY, "OP", Graphics.TEXT_JUSTIFY_CENTER);
+        if (showPlayerStats()) {
+            drawText(dc, 220, 102, Graphics.FONT_XTINY, "PTS", Graphics.TEXT_JUSTIFY_CENTER);
+            drawText(dc, 285, 102, Graphics.FONT_XTINY, "ERR", Graphics.TEXT_JUSTIFY_CENTER);
+            drawText(dc, 350, 102, Graphics.FONT_XTINY, "DF", Graphics.TEXT_JUSTIFY_CENTER);
+        } else {
+            drawText(dc, 270, 102, Graphics.FONT_XTINY, "Me", Graphics.TEXT_JUSTIFY_CENTER);
+            drawText(dc, 342, 102, Graphics.FONT_XTINY, "OP", Graphics.TEXT_JUSTIFY_CENTER);
+        }
     }
 
     function drawEmptyState(dc, centerX) {
@@ -67,6 +73,11 @@ class MatchStatsView extends WatchUi.View {
     }
 
     function drawRows(dc, width, state) {
+        if (showPlayerStats()) {
+            drawPlayerRows(dc, width, state);
+            return;
+        }
+
         var indices = metricIndices();
 
         for (var i = 0; i < indices.size(); i++) {
@@ -79,14 +90,40 @@ class MatchStatsView extends WatchUi.View {
         dc.drawLine(60, bottom, width - 60, bottom);
     }
 
-    function metricIndices() {
-        if (!_finalStats) {
-            return _page == 0 ? [0, 2, 3] : [4, 5];
+    function drawPlayerRows(dc, width, state) {
+        var names = ["ME", "P", "OP 1", "OP 2"];
+
+        for (var i = 0; i < 4; i++) {
+            var y = ROW_TOP + (i * ROW_HEIGHT);
+            dc.setColor(COLOR_LINE, Graphics.COLOR_TRANSPARENT);
+            dc.drawLine(60, y, width - 60, y);
+            dc.setColor(COLOR_MUTED, Graphics.COLOR_TRANSPARENT);
+            drawText(dc, 66, y + (ROW_HEIGHT / 2), Graphics.FONT_XTINY, names[i], Graphics.TEXT_JUSTIFY_LEFT);
+            dc.setColor(COLOR_ORANGE, Graphics.COLOR_TRANSPARENT);
+            drawText(dc, 220, y + (ROW_HEIGHT / 2), Graphics.FONT_XTINY, state.pointsScored[i].toString(), Graphics.TEXT_JUSTIFY_CENTER);
+            dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
+            drawText(dc, 285, y + (ROW_HEIGHT / 2), Graphics.FONT_XTINY, state.errors[i].toString(), Graphics.TEXT_JUSTIFY_CENTER);
+            drawText(dc, 350, y + (ROW_HEIGHT / 2), Graphics.FONT_XTINY, state.doubleFaults[i].toString(), Graphics.TEXT_JUSTIFY_CENTER);
         }
-        if (_page == 0) {
+
+        dc.setColor(COLOR_LINE, Graphics.COLOR_TRANSPARENT);
+        dc.drawLine(60, ROW_TOP + (4 * ROW_HEIGHT), width - 60, ROW_TOP + (4 * ROW_HEIGHT));
+    }
+
+    function showPlayerStats() {
+        return _engine.getSettings().trackPlays && _page == 0;
+    }
+
+    function metricIndices() {
+        var metricPage = _engine.getSettings().trackPlays ? _page - 1 : _page;
+
+        if (!_finalStats) {
+            return metricPage == 0 ? [0, 2, 3] : [4, 5];
+        }
+        if (metricPage == 0) {
             return [0, 1, 2, 3];
         }
-        if (_page == 1) {
+        if (metricPage == 1) {
             return [4, 5, 6];
         }
         return [7, 8];
@@ -158,7 +195,8 @@ class MatchStatsView extends WatchUi.View {
     }
 
     function pageCount() {
-        return _finalStats ? 3 : 2;
+        var count = _finalStats ? 3 : 2;
+        return _engine.getSettings().trackPlays ? count + 1 : count;
     }
 
     function nextPage() {

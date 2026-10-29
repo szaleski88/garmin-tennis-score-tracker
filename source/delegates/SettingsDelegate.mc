@@ -32,6 +32,9 @@ class SettingsDelegate extends WatchUi.Menu2InputDelegate {
         } else if (id.equals("tieBreakAt")) {
             _settings.tieBreakAt = _settings.tieBreakAt == 6 ? 3 : 6;
             updateItem(item, _settings.tieBreakAt.toString());
+        } else if (id.equals("trackPlays")) {
+            _settings.trackPlays = !_settings.trackPlays;
+            updateItem(item, _settings.trackPlays ? "YES" : "NO");
         } else if (id.equals("save")) {
             PersistenceManager.saveSettings(_settings);
             WatchUi.popView(WatchUi.SLIDE_RIGHT);
@@ -48,6 +51,7 @@ class SettingsDelegate extends WatchUi.Menu2InputDelegate {
         _settings.tieBreakAt = _original.tieBreakAt;
         _settings.goldenPoint = _original.goldenPoint;
         _settings.finalSetMode = _original.finalSetMode;
+        _settings.trackPlays = _original.trackPlays;
     }
 
     function cycleFormat() {

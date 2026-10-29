@@ -22,6 +22,15 @@ class TennisMatchDelegate extends WatchUi.BehaviorDelegate {
             return true;
         }
         var coords = clickEvent.getCoordinates();
+
+        if (_engine.isAwaitingServerSelection()) {
+            return selectSetServer(coords[0] < 208);
+        }
+
+        if (_engine.isAwaitingAttribution()) {
+            return attributePoint(coords);
+        }
+
         if (coords[1] < SCREEN_SPLIT_Y) {
             return scoreOpponentPoint();
         }
@@ -46,6 +55,9 @@ class TennisMatchDelegate extends WatchUi.BehaviorDelegate {
         if (_view.hasNotice()) {
             return true;
         }
+        if (_engine.isAwaitingServerSelection() || _engine.isAwaitingAttribution()) {
+            return true;
+        }
         if (direction == WatchUi.SWIPE_RIGHT || direction == WatchUi.SWIPE_DOWN) {
             return showPauseMenu();
         } else if (direction == WatchUi.SWIPE_LEFT) {
@@ -63,12 +75,18 @@ class TennisMatchDelegate extends WatchUi.BehaviorDelegate {
         if (_view.hasNotice()) {
             return true;
         }
+        if (_engine.isAwaitingAttribution() || _engine.isAwaitingServerSelection()) {
+            return true;
+        }
         // Garmin natively maps Swipe Down to this
         return showPauseMenu();
     }
 
     function onNextPage() {
         if (_view.hasNotice()) {
+            return true;
+        }
+        if (_engine.isAwaitingAttribution() || _engine.isAwaitingServerSelection()) {
             return true;
         }
         // Garmin natively maps Swipe Up to this
@@ -78,6 +96,9 @@ class TennisMatchDelegate extends WatchUi.BehaviorDelegate {
     // --- Hardware Buttons ---
     function onKey(keyEvent) {
         if (_view.hasNotice()) {
+            return true;
+        }
+        if (_engine.isAwaitingAttribution() || _engine.isAwaitingServerSelection()) {
             return true;
         }
         var key = keyEvent.getKey();
@@ -103,11 +124,17 @@ class TennisMatchDelegate extends WatchUi.BehaviorDelegate {
         if (_view.hasNotice()) {
             return true;
         }
+        if (_engine.isAwaitingAttribution() || _engine.isAwaitingServerSelection()) {
+            return true;
+        }
         return scorePlayerPoint();
     }
 
     function onMenu() {
         if (_view.hasNotice()) {
+            return true;
+        }
+        if (_engine.isAwaitingAttribution() || _engine.isAwaitingServerSelection()) {
             return true;
         }
         return undoPoint();
@@ -143,13 +170,65 @@ class TennisMatchDelegate extends WatchUi.BehaviorDelegate {
     }
 
     function scorePoint(playerWonPoint) {
+        var previousServer = _engine.getState().currentServer;
         var result = playerWonPoint ? _engine.scorePlayer() : _engine.scoreOpponent();
         _view.requestRedraw();
+
+        if (_engine.isAwaitingAttribution() || _engine.isAwaitingServerSelection()) {
+            return true;
+        }
+
+        return handlePointResult(result, previousServer);
+    }
+
+    function attributePoint(coords) {
+        var x = coords[0];
+        var y = coords[1];
+        var dx = x - 208;
+        var dy = y - 208;
+        var player;
+
+        if (_engine.doubleFaultAvailable() && ((dx * dx) + (dy * dy)) <= 2304) {
+            player = PlayerId.DOUBLE_FAULT;
+        } else if (y < SCREEN_SPLIT_Y) {
+            player = x < 208 ? PlayerId.OP_1 : PlayerId.OP_2;
+        } else {
+            player = x < 208 ? PlayerId.ME : PlayerId.PARTNER;
+        }
+
+        var previousServer = _engine.getState().currentServer;
+        var result = _engine.attributePoint(player);
+        _view.requestRedraw();
+        return handlePointResult(result, previousServer);
+    }
+
+    function selectSetServer(firstChoice) {
+        var playerTeam = _engine.getState().playerServing;
+        var player;
+
+        if (playerTeam) {
+            player = firstChoice ? PlayerId.ME : PlayerId.PARTNER;
+        } else {
+            player = firstChoice ? PlayerId.OP_1 : PlayerId.OP_2;
+        }
+
+        if (_engine.selectSetStartingServer(player)) {
+            _view.requestRedraw();
+            _view.showNotice(PlayerId.serveNotice(player));
+        }
+        return true;
+    }
+
+    function handlePointResult(result, previousServer) {
 
         if (result == MatchResult.SIDE_SWAP) {
             _view.showNotice("SWITCH SIDES");
         } else if (result == MatchResult.MATCH) {
             return showStatsConfirmation();
+        } else if (!_engine.isAwaitingServerSelection() &&
+            _engine.getSettings().trackPlays &&
+            previousServer != _engine.getState().currentServer) {
+            _view.showNotice(PlayerId.serveNotice(_engine.getState().currentServer));
         }
 
         return true;

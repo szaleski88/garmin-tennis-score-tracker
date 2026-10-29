@@ -37,6 +37,14 @@ class MatchState {
     var maxPlayerPointLead;
     var maxOpponentPointLead;
     var selectedFinalSetMode;
+    var currentServer;
+    var serverRotation;
+    var tieBreakStarterServer;
+    var awaitingServerSelection;
+    var pendingPointWinner;
+    var pointsScored;
+    var errors;
+    var doubleFaults;
 
     function initialize() {
         playerSets = 0;
@@ -77,6 +85,14 @@ class MatchState {
         maxPlayerPointLead = 0;
         maxOpponentPointLead = 0;
         selectedFinalSetMode = null;
+        currentServer = PlayerId.ME;
+        serverRotation = [PlayerId.ME, PlayerId.OP_1, PlayerId.PARTNER, PlayerId.OP_2];
+        tieBreakStarterServer = PlayerId.ME;
+        awaitingServerSelection = false;
+        pendingPointWinner = 0;
+        pointsScored = [0, 0, 0, 0];
+        errors = [0, 0, 0, 0];
+        doubleFaults = [0, 0, 0, 0];
     }
 
     function clone() {
@@ -119,6 +135,14 @@ class MatchState {
         copy.maxPlayerPointLead = maxPlayerPointLead;
         copy.maxOpponentPointLead = maxOpponentPointLead;
         copy.selectedFinalSetMode = selectedFinalSetMode;
+        copy.currentServer = currentServer;
+        copy.serverRotation = [serverRotation[0], serverRotation[1], serverRotation[2], serverRotation[3]];
+        copy.tieBreakStarterServer = tieBreakStarterServer;
+        copy.awaitingServerSelection = awaitingServerSelection;
+        copy.pendingPointWinner = pendingPointWinner;
+        copy.pointsScored = [pointsScored[0], pointsScored[1], pointsScored[2], pointsScored[3]];
+        copy.errors = [errors[0], errors[1], errors[2], errors[3]];
+        copy.doubleFaults = [doubleFaults[0], doubleFaults[1], doubleFaults[2], doubleFaults[3]];
         return copy;
     }
 
@@ -161,7 +185,15 @@ class MatchState {
             "longestOpponentGameStreak" => longestOpponentGameStreak,
             "maxPlayerPointLead" => maxPlayerPointLead,
             "maxOpponentPointLead" => maxOpponentPointLead,
-            "selectedFinalSetMode" => selectedFinalSetMode
+            "selectedFinalSetMode" => selectedFinalSetMode,
+            "currentServer" => currentServer,
+            "serverRotation" => serverRotation,
+            "tieBreakStarterServer" => tieBreakStarterServer,
+            "awaitingServerSelection" => awaitingServerSelection,
+            "pendingPointWinner" => pendingPointWinner,
+            "pointsScored" => pointsScored,
+            "errors" => errors,
+            "doubleFaults" => doubleFaults
         };
     }
 
@@ -204,7 +236,15 @@ class MatchState {
             longestOpponentGameStreak,
             maxPlayerPointLead,
             maxOpponentPointLead,
-            selectedFinalSetMode
+            selectedFinalSetMode,
+            currentServer,
+            serverRotation,
+            tieBreakStarterServer,
+            awaitingServerSelection,
+            pendingPointWinner,
+            pointsScored,
+            errors,
+            doubleFaults
         ];
     }
 
@@ -329,6 +369,30 @@ class MatchState {
         if (data.hasKey("selectedFinalSetMode")) {
             state.selectedFinalSetMode = data["selectedFinalSetMode"];
         }
+        if (data.hasKey("currentServer")) {
+            state.currentServer = data["currentServer"];
+        }
+        if (data.hasKey("serverRotation")) {
+            state.serverRotation = data["serverRotation"];
+        }
+        if (data.hasKey("tieBreakStarterServer")) {
+            state.tieBreakStarterServer = data["tieBreakStarterServer"];
+        }
+        if (data.hasKey("awaitingServerSelection")) {
+            state.awaitingServerSelection = data["awaitingServerSelection"];
+        }
+        if (data.hasKey("pendingPointWinner")) {
+            state.pendingPointWinner = data["pendingPointWinner"];
+        }
+        if (data.hasKey("pointsScored")) {
+            state.pointsScored = data["pointsScored"];
+        }
+        if (data.hasKey("errors")) {
+            state.errors = data["errors"];
+        }
+        if (data.hasKey("doubleFaults")) {
+            state.doubleFaults = data["doubleFaults"];
+        }
 
         return state;
     }
@@ -432,6 +496,30 @@ class MatchState {
         }
         if (data.size() > 37) {
             state.selectedFinalSetMode = data[37];
+        }
+        if (data.size() > 38) {
+            state.currentServer = data[38];
+        }
+        if (data.size() > 39) {
+            state.serverRotation = data[39];
+        }
+        if (data.size() > 40) {
+            state.tieBreakStarterServer = data[40];
+        }
+        if (data.size() > 41) {
+            state.awaitingServerSelection = data[41];
+        }
+        if (data.size() > 42) {
+            state.pendingPointWinner = data[42];
+        }
+        if (data.size() > 43) {
+            state.pointsScored = data[43];
+        }
+        if (data.size() > 44) {
+            state.errors = data[44];
+        }
+        if (data.size() > 45) {
+            state.doubleFaults = data[45];
         }
 
         return state;
