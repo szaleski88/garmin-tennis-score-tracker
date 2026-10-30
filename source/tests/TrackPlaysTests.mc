@@ -71,6 +71,65 @@ function doubleFaultAvailabilityAndServerAssignment(logger) {
 }
 
 (:test)
+function aceAttributionStatisticsUndoAndPersistence(logger) {
+    PersistenceManager.clearMatch();
+    var engine = new ScoringEngine(trackedSettings(), true, PlayerId.PARTNER);
+    engine.scoreOpponent();
+    var passed = expectTrackPlay(logger, !engine.aceAvailable(), "ACE must be hidden when the serving team loses");
+    engine.undo();
+
+    engine.scorePlayer();
+    passed = expectTrackPlay(logger, engine.aceAvailable(), "ACE must be available when the serving team wins") && passed;
+    passed = expectTrackPlay(logger, !engine.doubleFaultAvailable(), "DF behavior must remain exclusive to a serving-team loss") && passed;
+    var delegate = new TennisMatchDelegate(engine, null);
+    passed = expectTrackPlay(logger, delegate.playerForAttribution(208, 208) == PlayerId.ACE, "Center circle should select ACE") && passed;
+    engine.attributePoint(PlayerId.ACE);
+
+    var state = engine.getState();
+    passed = expectTrackPlay(logger, state.playerPoints == 1 && state.playerTotalPoints == 1, "ACE should commit the point") && passed;
+    passed = expectTrackPlay(logger, state.pointsScored[PlayerId.PARTNER] == 1, "ACE should attribute the point to the server") && passed;
+    passed = expectTrackPlay(logger, state.aces[PlayerId.PARTNER] == 1, "ACE should increment the server's ACE total") && passed;
+
+    var restored = ScoringEngine.resume(PersistenceManager.loadMatch());
+    passed = expectTrackPlay(logger, restored.getState().aces[PlayerId.PARTNER] == 1, "ACE total should persist") && passed;
+    passed = expectTrackPlay(logger, restored.getState().pointsScored[PlayerId.PARTNER] == 1, "ACE attribution should persist") && passed;
+    restored.undo();
+    passed = expectTrackPlay(logger, restored.getState().playerPoints == 0 && restored.getState().aces[PlayerId.PARTNER] == 0, "Undo should restore score and ACE total") && passed;
+    restored.redo();
+    passed = expectTrackPlay(logger, restored.getState().playerPoints == 1 && restored.getState().aces[PlayerId.PARTNER] == 1, "Redo should restore score and ACE total") && passed;
+    PersistenceManager.clearMatch();
+    return passed;
+}
+
+(:test)
+function doubleFaultTapCannotLeakIntoOpponentQuadrant(logger) {
+    PersistenceManager.clearMatch();
+    var engine = new ScoringEngine(trackedSettings(), true, PlayerId.ME);
+    engine.scoreOpponent();
+    var delegate = new TennisMatchDelegate(engine, null);
+    var passed = expectTrackPlay(
+        logger,
+        delegate.playerForAttribution(260, 178) == PlayerId.DOUBLE_FAULT,
+        "Padded DF hit area should win over the OP 2 quadrant"
+    );
+
+    engine.attributePoint(PlayerId.DOUBLE_FAULT);
+    for (var i = 0; i < 4; i++) {
+        finishTrackedPoint(engine, true, PlayerId.ME);
+    }
+
+    var state = engine.getState();
+    passed = expectTrackPlay(logger, state.playerGames == 1 && state.opponentGames == 0, "Sequence should produce a 1-0 game score") && passed;
+    passed = expectTrackPlay(logger, state.pointsScored[PlayerId.ME] == 4, "All four won points should belong to ME") && passed;
+    passed = expectTrackPlay(logger, state.doubleFaults[PlayerId.ME] == 1, "The opening DF should belong to ME") && passed;
+    passed = expectTrackPlay(logger, state.pointsScored[PlayerId.PARTNER] == 0 && state.errors[PlayerId.PARTNER] == 0 && state.doubleFaults[PlayerId.PARTNER] == 0, "P should remain at zero") && passed;
+    passed = expectTrackPlay(logger, state.pointsScored[PlayerId.OP_1] == 0 && state.errors[PlayerId.OP_1] == 0 && state.doubleFaults[PlayerId.OP_1] == 0, "OP 1 should remain at zero") && passed;
+    passed = expectTrackPlay(logger, state.pointsScored[PlayerId.OP_2] == 0 && state.errors[PlayerId.OP_2] == 0 && state.doubleFaults[PlayerId.OP_2] == 0, "OP 2 should remain at zero") && passed;
+    PersistenceManager.clearMatch();
+    return passed;
+}
+
+(:test)
 function undoRestoresScoreAndAttributionTogether(logger) {
     PersistenceManager.clearMatch();
     var engine = new ScoringEngine(trackedSettings(), true, PlayerId.ME);
@@ -115,6 +174,45 @@ function newSetRequestsAndLocksIndividualServer(logger) {
     finishTrackedPoint(engine, false, PlayerId.OP_2);
     passed = expectTrackPlay(logger, state.currentServer == PlayerId.ME, "Fixed rotation should advance after the game") && passed;
     passed = expectTrackPlay(logger, !engine.selectSetStartingServer(PlayerId.PARTNER), "Rotation cannot change during a set") && passed;
+    PersistenceManager.clearMatch();
+    return passed;
+}
+
+(:test)
+function firstGameRequestsOpposingTeamServerAndLocksRotation(logger) {
+    PersistenceManager.clearMatch();
+    var engine = new ScoringEngine(trackedSettings(), true, PlayerId.ME);
+
+    for (var i = 0; i < 4; i++) {
+        finishTrackedPoint(engine, true, PlayerId.ME);
+    }
+
+    var state = engine.getState();
+    var passed = expectTrackPlay(logger, engine.isAwaitingServerSelection(), "First game should request the opposing team's server");
+    passed = expectTrackPlay(logger, !state.playerServing, "Opposing team should serve the second game") && passed;
+    passed = expectTrackPlay(logger, !engine.selectSetStartingServer(PlayerId.ME), "A player from the first-serving team must not be selectable") && passed;
+    passed = expectTrackPlay(logger, engine.selectSetStartingServer(PlayerId.OP_2), "One of the two opposing players should be selectable") && passed;
+    passed = expectTrackPlay(logger, state.currentServer == PlayerId.OP_2, "Selected opponent should serve first for that team") && passed;
+    passed = expectTrackPlay(logger, state.serverRotation[0] == PlayerId.OP_2 && state.serverRotation[1] == PlayerId.ME && state.serverRotation[2] == PlayerId.OP_1 && state.serverRotation[3] == PlayerId.PARTNER, "Selection should establish the four-player service order") && passed;
+
+    var restored = ScoringEngine.resume(PersistenceManager.loadMatch());
+    passed = expectTrackPlay(logger, restored.getState().currentServer == PlayerId.OP_2 && restored.getState().serverRotation[0] == PlayerId.OP_2, "Opposing-team service order should persist") && passed;
+
+    for (var j = 0; j < 4; j++) {
+        finishTrackedPoint(restored, false, PlayerId.ACE);
+    }
+
+    passed = expectTrackPlay(logger, !restored.isAwaitingServerSelection(), "Later games should not repeat the first-game selection") && passed;
+    passed = expectTrackPlay(logger, restored.getState().currentServer == PlayerId.ME, "Service order should advance to the selected next server") && passed;
+
+    var reverseEngine = new ScoringEngine(trackedSettings(), false, PlayerId.OP_1);
+    for (var k = 0; k < 4; k++) {
+        finishTrackedPoint(reverseEngine, false, PlayerId.OP_1);
+    }
+    passed = expectTrackPlay(logger, reverseEngine.isAwaitingServerSelection() && reverseEngine.getState().playerServing, "The first-game prompt should target our team when opponents served first") && passed;
+    passed = expectTrackPlay(logger, !reverseEngine.selectSetStartingServer(PlayerId.OP_2), "Only the now-serving team should be selectable") && passed;
+    passed = expectTrackPlay(logger, reverseEngine.selectSetStartingServer(PlayerId.PARTNER), "Either eligible player on our team should be selectable") && passed;
+    passed = expectTrackPlay(logger, reverseEngine.getState().currentServer == PlayerId.PARTNER, "Selected partner should lead our team's service order") && passed;
     PersistenceManager.clearMatch();
     return passed;
 }
@@ -190,9 +288,9 @@ function trackedStateAndSettingsRoundTrip(logger) {
 (:test)
 function allPlayersRemainRepresentedAtZero(logger) {
     var state = new MatchState();
-    var passed = expectTrackPlay(logger, state.pointsScored.size() == 4 && state.errors.size() == 4 && state.doubleFaults.size() == 4, "All four players should have all stat categories");
+    var passed = expectTrackPlay(logger, state.pointsScored.size() == 4 && state.errors.size() == 4 && state.doubleFaults.size() == 4 && state.aces.size() == 4, "All four players should have all stat categories");
     for (var i = 0; i < 4; i++) {
-        passed = expectTrackPlay(logger, state.pointsScored[i] == 0 && state.errors[i] == 0 && state.doubleFaults[i] == 0, "Zero-value player stats should be retained") && passed;
+        passed = expectTrackPlay(logger, state.pointsScored[i] == 0 && state.errors[i] == 0 && state.doubleFaults[i] == 0 && state.aces[i] == 0, "Zero-value player stats should be retained") && passed;
     }
     return passed;
 }

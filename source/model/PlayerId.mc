@@ -4,6 +4,7 @@ module PlayerId {
     const OP_1 = 2;
     const OP_2 = 3;
     const DOUBLE_FAULT = 4;
+    const ACE = 5;
 
     function isOurTeam(player) {
         return player == ME || player == PARTNER;
@@ -22,7 +23,10 @@ module PlayerId {
         if (player == OP_2) {
             return "OP 2";
         }
-        return "DF";
+        if (player == DOUBLE_FAULT) {
+            return "DF";
+        }
+        return "ACE";
     }
 
     function serveNotice(player) {

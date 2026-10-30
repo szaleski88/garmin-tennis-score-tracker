@@ -97,6 +97,15 @@ class ScoringEngine {
         return playerWonPoint != PlayerId.isOurTeam(_state.currentServer);
     }
 
+    function aceAvailable() {
+        if (!isAwaitingAttribution()) {
+            return false;
+        }
+
+        var playerWonPoint = _state.pendingPointWinner == 1;
+        return playerWonPoint == PlayerId.isOurTeam(_state.currentServer);
+    }
+
     function historyToStorage() {
         return stateStackToStorage(_history);
     }
@@ -157,6 +166,12 @@ class ScoringEngine {
                 return MatchResult.NONE;
             }
             _state.doubleFaults[_state.currentServer]++;
+        } else if (player == PlayerId.ACE) {
+            if (!aceAvailable()) {
+                return MatchResult.NONE;
+            }
+            _state.pointsScored[_state.currentServer]++;
+            _state.aces[_state.currentServer]++;
         } else if (player >= PlayerId.ME && player <= PlayerId.OP_2) {
             if (PlayerId.isOurTeam(player) == playerWonPoint) {
                 _state.pointsScored[player]++;
@@ -486,6 +501,10 @@ class ScoringEngine {
         }
 
         startNextGame();
+        if (_settings.trackPlays &&
+            (_state.playerTotalGames + _state.opponentTotalGames) == 1) {
+            _state.awaitingServerSelection = true;
+        }
         return MatchResult.GAME;
     }
 

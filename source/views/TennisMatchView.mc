@@ -162,6 +162,11 @@ class TennisMatchView extends WatchUi.View {
             dc.fillCircle(centerX, centerY, 48);
             dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_TRANSPARENT);
             drawCenteredText(dc, centerX, centerY, Graphics.FONT_MEDIUM, "DF");
+        } else if (_engine.aceAvailable()) {
+            dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
+            dc.fillCircle(centerX, centerY, 48);
+            dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_TRANSPARENT);
+            drawCenteredText(dc, centerX, centerY, Graphics.FONT_SMALL, "ACE");
         }
     }
 

@@ -45,6 +45,7 @@ class MatchState {
     var pointsScored;
     var errors;
     var doubleFaults;
+    var aces;
 
     function initialize() {
         playerSets = 0;
@@ -93,6 +94,7 @@ class MatchState {
         pointsScored = [0, 0, 0, 0];
         errors = [0, 0, 0, 0];
         doubleFaults = [0, 0, 0, 0];
+        aces = [0, 0, 0, 0];
     }
 
     function clone() {
@@ -143,6 +145,7 @@ class MatchState {
         copy.pointsScored = [pointsScored[0], pointsScored[1], pointsScored[2], pointsScored[3]];
         copy.errors = [errors[0], errors[1], errors[2], errors[3]];
         copy.doubleFaults = [doubleFaults[0], doubleFaults[1], doubleFaults[2], doubleFaults[3]];
+        copy.aces = [aces[0], aces[1], aces[2], aces[3]];
         return copy;
     }
 
@@ -193,7 +196,8 @@ class MatchState {
             "pendingPointWinner" => pendingPointWinner,
             "pointsScored" => pointsScored,
             "errors" => errors,
-            "doubleFaults" => doubleFaults
+            "doubleFaults" => doubleFaults,
+            "aces" => aces
         };
     }
 
@@ -244,7 +248,8 @@ class MatchState {
             pendingPointWinner,
             pointsScored,
             errors,
-            doubleFaults
+            doubleFaults,
+            aces
         ];
     }
 
@@ -393,6 +398,9 @@ class MatchState {
         if (data.hasKey("doubleFaults")) {
             state.doubleFaults = data["doubleFaults"];
         }
+        if (data.hasKey("aces")) {
+            state.aces = data["aces"];
+        }
 
         return state;
     }
@@ -520,6 +528,9 @@ class MatchState {
         }
         if (data.size() > 45) {
             state.doubleFaults = data[45];
+        }
+        if (data.size() > 46) {
+            state.aces = data[46];
         }
 
         return state;

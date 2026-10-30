@@ -1,12 +1,17 @@
+using Toybox.System;
 using Toybox.WatchUi;
 
 class TennisMatchDelegate extends WatchUi.BehaviorDelegate {
     static const SCREEN_SPLIT_Y = 208;
+    static const DF_HIT_RADIUS = 64;
+    static const ACE_HIT_RADIUS = 64;
+    static const TAP_DEBOUNCE_MS = 350;
 
     var _engine;
     var _view;
     var _pauseMenuOpen;
     var _statsConfirmationOpen;
+    var _lastAttributionAt;
 
     function initialize(engine, view) {
         BehaviorDelegate.initialize();
@@ -14,11 +19,15 @@ class TennisMatchDelegate extends WatchUi.BehaviorDelegate {
         _view = view;
         _pauseMenuOpen = false;
         _statsConfirmationOpen = false;
+        _lastAttributionAt = null;
     }
 
     // --- Screen Taps ---
     function onTap(clickEvent) {
         if (_view.hasNotice()) {
+            return true;
+        }
+        if (tapIsDebounced()) {
             return true;
         }
         var coords = clickEvent.getCoordinates();
@@ -184,22 +193,45 @@ class TennisMatchDelegate extends WatchUi.BehaviorDelegate {
     function attributePoint(coords) {
         var x = coords[0];
         var y = coords[1];
-        var dx = x - 208;
-        var dy = y - 208;
-        var player;
-
-        if (_engine.doubleFaultAvailable() && ((dx * dx) + (dy * dy)) <= 2304) {
-            player = PlayerId.DOUBLE_FAULT;
-        } else if (y < SCREEN_SPLIT_Y) {
-            player = x < 208 ? PlayerId.OP_1 : PlayerId.OP_2;
-        } else {
-            player = x < 208 ? PlayerId.ME : PlayerId.PARTNER;
-        }
+        var player = playerForAttribution(x, y);
 
         var previousServer = _engine.getState().currentServer;
         var result = _engine.attributePoint(player);
+        if (!_engine.isAwaitingAttribution()) {
+            _lastAttributionAt = System.getTimer();
+        }
         _view.requestRedraw();
         return handlePointResult(result, previousServer);
+    }
+
+    function playerForAttribution(x, y) {
+        var dx = x - 208;
+        var dy = y - 208;
+
+        if (_engine.doubleFaultAvailable() &&
+            ((dx * dx) + (dy * dy)) <= (DF_HIT_RADIUS * DF_HIT_RADIUS)) {
+            return PlayerId.DOUBLE_FAULT;
+        }
+
+        if (_engine.aceAvailable() &&
+            ((dx * dx) + (dy * dy)) <= (ACE_HIT_RADIUS * ACE_HIT_RADIUS)) {
+            return PlayerId.ACE;
+        }
+
+        if (y < SCREEN_SPLIT_Y) {
+            return x < 208 ? PlayerId.OP_1 : PlayerId.OP_2;
+        }
+
+        return x < 208 ? PlayerId.ME : PlayerId.PARTNER;
+    }
+
+    function tapIsDebounced() {
+        if (_lastAttributionAt == null) {
+            return false;
+        }
+
+        var elapsed = System.getTimer() - _lastAttributionAt;
+        return elapsed >= 0 && elapsed < TAP_DEBOUNCE_MS;
     }
 
     function selectSetServer(firstChoice) {

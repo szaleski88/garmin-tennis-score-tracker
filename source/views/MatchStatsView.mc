@@ -56,8 +56,9 @@ class MatchStatsView extends WatchUi.View {
 
         dc.setColor(0x777777, Graphics.COLOR_TRANSPARENT);
         if (showPlayerStats()) {
-            drawText(dc, 220, 102, Graphics.FONT_XTINY, "PTS", Graphics.TEXT_JUSTIFY_CENTER);
-            drawText(dc, 285, 102, Graphics.FONT_XTINY, "ERR", Graphics.TEXT_JUSTIFY_CENTER);
+            drawText(dc, 200, 102, Graphics.FONT_XTINY, "PTS", Graphics.TEXT_JUSTIFY_CENTER);
+            drawText(dc, 250, 102, Graphics.FONT_XTINY, "ACE", Graphics.TEXT_JUSTIFY_CENTER);
+            drawText(dc, 300, 102, Graphics.FONT_XTINY, "ERR", Graphics.TEXT_JUSTIFY_CENTER);
             drawText(dc, 350, 102, Graphics.FONT_XTINY, "DF", Graphics.TEXT_JUSTIFY_CENTER);
         } else {
             drawText(dc, 270, 102, Graphics.FONT_XTINY, "Me", Graphics.TEXT_JUSTIFY_CENTER);
@@ -100,9 +101,10 @@ class MatchStatsView extends WatchUi.View {
             dc.setColor(COLOR_MUTED, Graphics.COLOR_TRANSPARENT);
             drawText(dc, 66, y + (ROW_HEIGHT / 2), Graphics.FONT_XTINY, names[i], Graphics.TEXT_JUSTIFY_LEFT);
             dc.setColor(COLOR_ORANGE, Graphics.COLOR_TRANSPARENT);
-            drawText(dc, 220, y + (ROW_HEIGHT / 2), Graphics.FONT_XTINY, state.pointsScored[i].toString(), Graphics.TEXT_JUSTIFY_CENTER);
+            drawText(dc, 200, y + (ROW_HEIGHT / 2), Graphics.FONT_XTINY, state.pointsScored[i].toString(), Graphics.TEXT_JUSTIFY_CENTER);
             dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-            drawText(dc, 285, y + (ROW_HEIGHT / 2), Graphics.FONT_XTINY, state.errors[i].toString(), Graphics.TEXT_JUSTIFY_CENTER);
+            drawText(dc, 250, y + (ROW_HEIGHT / 2), Graphics.FONT_XTINY, state.aces[i].toString(), Graphics.TEXT_JUSTIFY_CENTER);
+            drawText(dc, 300, y + (ROW_HEIGHT / 2), Graphics.FONT_XTINY, state.errors[i].toString(), Graphics.TEXT_JUSTIFY_CENTER);
             drawText(dc, 350, y + (ROW_HEIGHT / 2), Graphics.FONT_XTINY, state.doubleFaults[i].toString(), Graphics.TEXT_JUSTIFY_CENTER);
         }
 
