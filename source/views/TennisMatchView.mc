@@ -175,7 +175,20 @@ class TennisMatchView extends WatchUi.View {
         dc.clear();
 
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-        drawCenteredText(dc, centerX, 74, Graphics.FONT_SMALL, "WHO SERVES FIRST?");
+        var tieBreak = state.stage == StageType.TIE_BREAK ||
+            state.stage == StageType.SUPER_TIE_BREAK;
+        var selectingSecond = _engine.isSelectingSecondServer();
+        var title;
+        var instruction;
+
+        if (tieBreak) {
+            title = selectingSecond ? "WHO SERVES NEXT?" : "WHO SERVES FIRST?";
+            instruction = "SELECT SERVER FOR THIS TIE-BREAK";
+        } else {
+            title = selectingSecond ? "WHO SERVES GAME 2?" : "WHO SERVES GAME 1?";
+            instruction = "SELECT SERVER FOR THIS SET";
+        }
+        drawCenteredText(dc, centerX, 74, Graphics.FONT_SMALL, title);
 
         dc.setColor(COLOR_ORANGE, Graphics.COLOR_TRANSPARENT);
         dc.fillCircle(centerX, centerY + 32, centerX);
@@ -189,7 +202,7 @@ class TennisMatchView extends WatchUi.View {
         drawCenteredText(dc, (width * 3) / 4, 190, Graphics.FONT_MEDIUM, right);
 
         dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_TRANSPARENT);
-        drawCenteredText(dc, centerX, 304, Graphics.FONT_XTINY, "SELECT SERVER FOR THIS SET");
+        drawCenteredText(dc, centerX, 304, Graphics.FONT_XTINY, instruction);
     }
 
     function drawFinalSetDecision(dc, width, height, centerX, centerY) {

@@ -12,10 +12,10 @@ class ServerSelectionDelegate extends WatchUi.Menu2InputDelegate {
         var id = item.getId();
         var playerServesFirst = id.equals("me");
 
-        if (_settings.trackPlays && playerServesFirst) {
+        if (_settings.trackPlays) {
             WatchUi.pushView(
-                new IndividualServerSelectionView(true),
-                new IndividualServerSelectionDelegate(_settings, true),
+                new IndividualServerSelectionView(playerServesFirst),
+                new IndividualServerSelectionDelegate(_settings, playerServesFirst),
                 WatchUi.SLIDE_LEFT
             );
             return;

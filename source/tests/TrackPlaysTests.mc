@@ -172,7 +172,10 @@ function newSetRequestsAndLocksIndividualServer(logger) {
 
     state.opponentPoints = 3;
     finishTrackedPoint(engine, false, PlayerId.OP_2);
-    passed = expectTrackPlay(logger, state.currentServer == PlayerId.ME, "Fixed rotation should advance after the game") && passed;
+    passed = expectTrackPlay(logger, engine.isAwaitingServerSelection(), "The second game of a new set should request the other team's server") && passed;
+    passed = expectTrackPlay(logger, engine.isSelectingSecondServer(), "The picker should identify the second server") && passed;
+    passed = expectTrackPlay(logger, engine.selectSetStartingServer(PlayerId.ME), "The second opening server should be accepted") && passed;
+    passed = expectTrackPlay(logger, state.serverRotation[0] == PlayerId.OP_2 && state.serverRotation[1] == PlayerId.ME && state.serverRotation[2] == PlayerId.OP_1 && state.serverRotation[3] == PlayerId.PARTNER, "Both new-set choices should define the service order") && passed;
     passed = expectTrackPlay(logger, !engine.selectSetStartingServer(PlayerId.PARTNER), "Rotation cannot change during a set") && passed;
     PersistenceManager.clearMatch();
     return passed;
@@ -192,18 +195,18 @@ function firstGameRequestsOpposingTeamServerAndLocksRotation(logger) {
     passed = expectTrackPlay(logger, !state.playerServing, "Opposing team should serve the second game") && passed;
     passed = expectTrackPlay(logger, !engine.selectSetStartingServer(PlayerId.ME), "A player from the first-serving team must not be selectable") && passed;
     passed = expectTrackPlay(logger, engine.selectSetStartingServer(PlayerId.OP_2), "One of the two opposing players should be selectable") && passed;
-    passed = expectTrackPlay(logger, state.currentServer == PlayerId.OP_2, "Selected opponent should serve first for that team") && passed;
-    passed = expectTrackPlay(logger, state.serverRotation[0] == PlayerId.OP_2 && state.serverRotation[1] == PlayerId.ME && state.serverRotation[2] == PlayerId.OP_1 && state.serverRotation[3] == PlayerId.PARTNER, "Selection should establish the four-player service order") && passed;
+    passed = expectTrackPlay(logger, state.currentServer == PlayerId.OP_2, "Selected opponent should serve game two") && passed;
+    passed = expectTrackPlay(logger, state.serverRotation[0] == PlayerId.ME && state.serverRotation[1] == PlayerId.OP_2 && state.serverRotation[2] == PlayerId.PARTNER && state.serverRotation[3] == PlayerId.OP_1, "Both choices should establish the four-player service order") && passed;
 
     var restored = ScoringEngine.resume(PersistenceManager.loadMatch());
-    passed = expectTrackPlay(logger, restored.getState().currentServer == PlayerId.OP_2 && restored.getState().serverRotation[0] == PlayerId.OP_2, "Opposing-team service order should persist") && passed;
+    passed = expectTrackPlay(logger, restored.getState().currentServer == PlayerId.OP_2 && restored.getState().serverRotation[0] == PlayerId.ME, "Opening service order should persist") && passed;
 
     for (var j = 0; j < 4; j++) {
         finishTrackedPoint(restored, false, PlayerId.ACE);
     }
 
     passed = expectTrackPlay(logger, !restored.isAwaitingServerSelection(), "Later games should not repeat the first-game selection") && passed;
-    passed = expectTrackPlay(logger, restored.getState().currentServer == PlayerId.ME, "Service order should advance to the selected next server") && passed;
+    passed = expectTrackPlay(logger, restored.getState().currentServer == PlayerId.PARTNER, "ME must not serve again in game three") && passed;
 
     var reverseEngine = new ScoringEngine(trackedSettings(), false, PlayerId.OP_1);
     for (var k = 0; k < 4; k++) {
@@ -212,7 +215,8 @@ function firstGameRequestsOpposingTeamServerAndLocksRotation(logger) {
     passed = expectTrackPlay(logger, reverseEngine.isAwaitingServerSelection() && reverseEngine.getState().playerServing, "The first-game prompt should target our team when opponents served first") && passed;
     passed = expectTrackPlay(logger, !reverseEngine.selectSetStartingServer(PlayerId.OP_2), "Only the now-serving team should be selectable") && passed;
     passed = expectTrackPlay(logger, reverseEngine.selectSetStartingServer(PlayerId.PARTNER), "Either eligible player on our team should be selectable") && passed;
-    passed = expectTrackPlay(logger, reverseEngine.getState().currentServer == PlayerId.PARTNER, "Selected partner should lead our team's service order") && passed;
+    passed = expectTrackPlay(logger, reverseEngine.getState().currentServer == PlayerId.PARTNER, "Selected partner should serve game two") && passed;
+    passed = expectTrackPlay(logger, reverseEngine.getState().serverRotation[0] == PlayerId.OP_1 && reverseEngine.getState().serverRotation[1] == PlayerId.PARTNER && reverseEngine.getState().serverRotation[2] == PlayerId.OP_2 && reverseEngine.getState().serverRotation[3] == PlayerId.ME, "Reverse opening choices should preserve both teams' order") && passed;
     PersistenceManager.clearMatch();
     return passed;
 }
@@ -221,15 +225,24 @@ function firstGameRequestsOpposingTeamServerAndLocksRotation(logger) {
 function finalSuperTieBreakRequestsIndividualServer(logger) {
     PersistenceManager.clearMatch();
     var settings = trackedSettings();
-    settings.finalSetMode = FinalSetMode.STB;
+    settings.finalSetMode = FinalSetMode.DECIDE;
     var engine = new ScoringEngine(settings, true, PlayerId.ME);
     var state = engine.getState();
     state.playerSets = 1;
     state.opponentGames = 5;
     state.opponentPoints = 3;
     finishTrackedPoint(engine, false, PlayerId.ME);
-    var passed = expectTrackPlay(logger, state.stage == StageType.SUPER_TIE_BREAK, "Final STB should start normally");
-    passed = expectTrackPlay(logger, engine.isAwaitingServerSelection(), "Final STB should request an individual server") && passed;
+    var passed = expectTrackPlay(logger, engine.isAwaitingFinalSetDecision(), "The deciding-set choice should appear first");
+    engine.scoreOpponent();
+    passed = expectTrackPlay(logger, state.stage == StageType.SUPER_TIE_BREAK, "Selected final STB should start normally") && passed;
+    passed = expectTrackPlay(logger, engine.isAwaitingServerSelection() && !engine.isSelectingSecondServer(), "Final STB should request its first individual server") && passed;
+    passed = expectTrackPlay(logger, engine.selectSetStartingServer(PlayerId.OP_2), "Either eligible first STB server should be selectable") && passed;
+    finishTrackedPoint(engine, true, PlayerId.ME);
+    passed = expectTrackPlay(logger, engine.isAwaitingServerSelection() && engine.isSelectingSecondServer(), "Final STB should request the other team's first server after point one") && passed;
+    passed = expectTrackPlay(logger, engine.selectSetStartingServer(PlayerId.PARTNER), "The second STB server should be selectable") && passed;
+    passed = expectTrackPlay(logger, state.currentServer == PlayerId.PARTNER, "Selected second STB server should serve next") && passed;
+    passed = expectTrackPlay(logger, state.tieBreakStarterServer == PlayerId.OP_2, "The first STB server must remain the tie-break starter") && passed;
+    passed = expectTrackPlay(logger, state.serverRotation[0] == PlayerId.OP_2 && state.serverRotation[1] == PlayerId.PARTNER && state.serverRotation[2] == PlayerId.OP_1 && state.serverRotation[3] == PlayerId.ME, "Final STB choices should define its complete order") && passed;
     PersistenceManager.clearMatch();
     return passed;
 }
@@ -242,7 +255,9 @@ function tieBreaksTrackOneThenTwoPointServerRotation(logger) {
     var engine = new ScoringEngine(settings, true, PlayerId.ME);
     var state = engine.getState();
     finishTrackedPoint(engine, true, PlayerId.ME);
-    var passed = expectTrackPlay(logger, state.currentServer == PlayerId.OP_1, "After point one, OP 1 should serve");
+    var passed = expectTrackPlay(logger, engine.isAwaitingServerSelection(), "After point one, the opposing tie-break server should be requested");
+    passed = expectTrackPlay(logger, engine.selectSetStartingServer(PlayerId.OP_1), "OP 1 should be selectable as the second server") && passed;
+    passed = expectTrackPlay(logger, state.currentServer == PlayerId.OP_1, "After point one, OP 1 should serve") && passed;
     finishTrackedPoint(engine, true, PlayerId.ME);
     passed = expectTrackPlay(logger, state.currentServer == PlayerId.OP_1, "OP 1 should serve the second point of the pair") && passed;
     finishTrackedPoint(engine, true, PlayerId.ME);
@@ -251,6 +266,8 @@ function tieBreaksTrackOneThenTwoPointServerRotation(logger) {
     settings.matchFormat = MatchFormat.STB_MATCH;
     var stb = new ScoringEngine(settings, false, PlayerId.OP_1);
     finishTrackedPoint(stb, true, PlayerId.ME);
+    passed = expectTrackPlay(logger, stb.isAwaitingServerSelection(), "Standalone STB should request the second server") && passed;
+    passed = expectTrackPlay(logger, stb.selectSetStartingServer(PlayerId.ME), "ME should be selectable as the second STB server") && passed;
     passed = expectTrackPlay(logger, stb.getState().currentServer == PlayerId.ME, "STB should use the same one-then-two sequence") && passed;
     PersistenceManager.clearMatch();
     return passed;

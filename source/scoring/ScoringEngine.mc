@@ -88,6 +88,18 @@ class ScoringEngine {
         return _settings.trackPlays && _state.awaitingServerSelection;
     }
 
+    function isSelectingSecondServer() {
+        if (!isAwaitingServerSelection()) {
+            return false;
+        }
+
+        if (isTieBreakStage()) {
+            return (_state.playerPoints + _state.opponentPoints) == 1;
+        }
+
+        return (_state.playerGames + _state.opponentGames) == 1;
+    }
+
     function doubleFaultAvailable() {
         if (!isAwaitingAttribution()) {
             return false;
@@ -270,10 +282,18 @@ class ScoringEngine {
             return false;
         }
 
-        configureServerRotation(player);
+        var selectingSecondServer = isSelectingSecondServer();
+
+        if (selectingSecondServer) {
+            var firstServer = isTieBreakStage() ?
+                _state.tieBreakStarterServer : _state.serverRotation[0];
+            configureServerRotationForOpeningServers(firstServer, player);
+        } else {
+            configureServerRotation(player);
+        }
         _state.awaitingServerSelection = false;
 
-        if (isTieBreakStage()) {
+        if (isTieBreakStage() && !selectingSecondServer) {
             _state.tieBreakStarterPlayerServing = _state.playerServing;
             _state.tieBreakStarterServer = _state.currentServer;
         }
@@ -283,18 +303,35 @@ class ScoringEngine {
     }
 
     function configureServerRotation(firstServer) {
-        if (firstServer == PlayerId.PARTNER) {
-            _state.serverRotation = [PlayerId.PARTNER, PlayerId.OP_1, PlayerId.ME, PlayerId.OP_2];
-        } else if (firstServer == PlayerId.OP_1) {
-            _state.serverRotation = [PlayerId.OP_1, PlayerId.ME, PlayerId.OP_2, PlayerId.PARTNER];
-        } else if (firstServer == PlayerId.OP_2) {
-            _state.serverRotation = [PlayerId.OP_2, PlayerId.ME, PlayerId.OP_1, PlayerId.PARTNER];
-        } else {
-            _state.serverRotation = [PlayerId.ME, PlayerId.OP_1, PlayerId.PARTNER, PlayerId.OP_2];
-        }
+        var defaultSecondServer = PlayerId.isOurTeam(firstServer) ?
+            PlayerId.OP_1 : PlayerId.ME;
+        configureServerRotationForOpeningServers(firstServer, defaultSecondServer);
 
         _state.currentServer = firstServer;
         _state.tieBreakStarterServer = firstServer;
+    }
+
+    function configureServerRotationForOpeningServers(firstServer, secondServer) {
+        _state.serverRotation = [
+            firstServer,
+            secondServer,
+            otherServerOnTeam(firstServer),
+            otherServerOnTeam(secondServer)
+        ];
+        _state.currentServer = secondServer;
+    }
+
+    function otherServerOnTeam(player) {
+        if (player == PlayerId.ME) {
+            return PlayerId.PARTNER;
+        }
+        if (player == PlayerId.PARTNER) {
+            return PlayerId.ME;
+        }
+        if (player == PlayerId.OP_1) {
+            return PlayerId.OP_2;
+        }
+        return PlayerId.OP_1;
     }
 
     function ensureMetrics() {
@@ -467,6 +504,12 @@ class ScoringEngine {
                 _state.playerServing = tieBreakServerForNextPoint();
                 updateTieBreakIndividualServer();
 
+                if (_settings.trackPlays &&
+                    _state.playerGames == 0 && _state.opponentGames == 0 &&
+                    (_state.playerPoints + _state.opponentPoints) == 1) {
+                    _state.awaitingServerSelection = true;
+                }
+
                 if (sideSwapDue()) {
                     return MatchResult.SIDE_SWAP;
                 }
@@ -502,7 +545,7 @@ class ScoringEngine {
 
         startNextGame();
         if (_settings.trackPlays &&
-            (_state.playerTotalGames + _state.opponentTotalGames) == 1) {
+            (_state.playerGames + _state.opponentGames) == 1) {
             _state.awaitingServerSelection = true;
         }
         return MatchResult.GAME;
